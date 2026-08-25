@@ -77,7 +77,6 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
     ])
 
-# البنوك المعتمدة للإيداع مع إمكانية إضافة بنوك جديدة
 if 'user_banks' not in st.session_state:
     st.session_state.user_banks = [
         {
@@ -98,11 +97,11 @@ if 'user_banks' not in st.session_state:
         }
     ]
 
-if 'transactions_db' not in st.session_state:
-    st.session_state.transactions_db = [
+if 'transactions_df' not in st.session_state:
+    st.session_state.transactions_df = pd.DataFrame([
         {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (FAB)", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic)", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
-    ]
+    ])
 
 if 'tickets_db' not in st.session_state:
     st.session_state.tickets_db = [
@@ -167,9 +166,10 @@ if menu_choice == "Accounts":
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Trading Accounts Matrix")
 
+    # جدول تعديل الخلايا الحالية فقط بدون صف إضافة فارغ في المنتصف
     edited_df = st.data_editor(
         st.session_state.accounts_df,
-        num_rows="dynamic",
+        num_rows="fixed",
         use_container_width=True,
         column_config={
             "Deposit": st.column_config.NumberColumn("Deposit ($)", format="$%.2f"),
@@ -184,6 +184,30 @@ if menu_choice == "Accounts":
     if not edited_df.equals(st.session_state.accounts_df):
         st.session_state.accounts_df = edited_df
         st.rerun()
+
+    # نموذج منزوي أسفل الجدول لإضافة حساب جديد
+    with st.expander("➕ Add New Trading Account"):
+        with st.form("add_acc_clean_form"):
+            c_a1, c_a2, c_a3 = st.columns(3)
+            with c_a1:
+                n_id = st.text_input("Account ID", value="9920145")
+                n_srv = st.selectbox("Server", ["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Pro STP"])
+            with c_a2:
+                n_type = st.selectbox("Type", ["VIP Institutional", "Classic STP", "Swap-Free Gold"])
+                n_dep = st.number_input("Deposit ($)", min_value=100.0, value=10000.0, step=1000.0)
+            with c_a3:
+                n_bal = st.number_input("Balance ($)", min_value=0.0, value=10000.0, step=1000.0)
+                n_pl = st.number_input("Daily P/L ($)", value=0.0, step=100.0)
+            
+            btn_add_acc = st.form_submit_button("Create & Register Account", type="primary")
+            if btn_add_acc and n_id:
+                new_acc_row = pd.DataFrame([{
+                    "Account ID": n_id, "Server": n_srv, "Account Type": n_type,
+                    "Deposit": n_dep, "Balance": n_bal, "Daily P/L": n_pl, "Status": "🔴 SUSPENDED"
+                }])
+                st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_acc_row], ignore_index=True)
+                st.success("Account added successfully!")
+                st.rerun()
 
     st.markdown("---")
     
@@ -254,19 +278,19 @@ elif menu_choice == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 3. Funds Screen (Bank Wire Only & Custom Bank Accounts)
+# 📂 3. Funds Screen (Clean Table + Bottom Add Section)
 # --------------------------------------------------
 elif menu_choice == "Funds":
     tab_dep, tab_with, tab_banks, tab_hist = st.tabs([
         "📥 Bank Deposit", "📤 Bank Withdrawal", "🏛️ Registered Bank Accounts", "📜 Transaction History"
     ])
     
+    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+
     # 1. إيداع بنكي
     with tab_dep:
         st.subheader("Deposit Capital via Direct Bank Wire")
         col_d1, col_d2 = st.columns([1.2, 1])
-        
-        bank_names = [b['bank_name'] for b in st.session_state.user_banks]
         
         with col_d1:
             with st.form("dep_bank_form"):
@@ -277,8 +301,7 @@ elif menu_choice == "Funds":
                 
                 dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
                 if dep_sub:
-                    # إضافة العملية في السجل
-                    st.session_state.transactions_db.insert(0, {
+                    new_row = pd.DataFrame([{
                         "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
                         "Date": datetime.today().strftime('%Y-%m-%d'),
                         "Type": "Deposit",
@@ -286,18 +309,17 @@ elif menu_choice == "Funds":
                         "Amount": f"${dep_val:,.2f}",
                         "Account": acc_target,
                         "Status": "Completed 🟢"
-                    })
+                    }])
+                    st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
                     
-                    # تحديث رصيد وإيداع الحساب المختار تلقائياً
                     idx = st.session_state.accounts_df.index[st.session_state.accounts_df['Account ID'] == acc_target].tolist()[0]
                     st.session_state.accounts_df.at[idx, 'Deposit'] += dep_val
                     st.session_state.accounts_df.at[idx, 'Balance'] += dep_val
                     
-                    st.success(f"Deposit of ${dep_val:,.2f} via {selected_bank_name} confirmed and added to Account {acc_target}!")
+                    st.success(f"Deposit of ${dep_val:,.2f} confirmed and added to Account {acc_target}!")
                     st.rerun()
 
         with col_d2:
-            # عرض بيانات البنك المختار
             curr_b = next(b for b in st.session_state.user_banks if b['bank_name'] == selected_bank_name)
             st.markdown(f"""
             <div class="portal-card">
@@ -326,7 +348,7 @@ elif menu_choice == "Funds":
             w_val = st.number_input("Withdrawal Amount ($)", min_value=100.0, value=5000.0, step=500.0)
             w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
             if w_sub:
-                st.session_state.transactions_db.insert(0, {
+                new_row = pd.DataFrame([{
                     "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
                     "Date": datetime.today().strftime('%Y-%m-%d'),
                     "Type": "Withdrawal",
@@ -334,11 +356,12 @@ elif menu_choice == "Funds":
                     "Amount": f"${w_val:,.2f}",
                     "Account": w_acc,
                     "Status": "Processing 🟡"
-                })
+                }])
+                st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
                 st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
                 st.rerun()
 
-    # 3. إدارة وإضافة بنوك جديدة
+    # 3. إدارة البنوك
     with tab_banks:
         st.subheader("Registered Bank Accounts")
         st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
@@ -346,11 +369,11 @@ elif menu_choice == "Funds":
         st.markdown("---")
         st.subheader("➕ Add New Bank Account")
         with st.form("add_new_bank_form"):
-            nb_name = st.text_input("Bank Name", placeholder="e.g. Dubai Islamic Bank / Abu Dhabi Commercial Bank")
+            nb_name = st.text_input("Bank Name", placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)")
             nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
             nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
             nb_iban = st.text_input("IBAN Number", placeholder="AE...")
-            nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. DIBKAEAD")
+            nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. ADCBAEAA")
             nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
             
             add_b_btn = st.form_submit_button("Save New Bank Account", type="primary")
@@ -363,13 +386,62 @@ elif menu_choice == "Funds":
                     "currency": nb_curr,
                     "swift": nb_swift
                 })
-                st.success(f"Bank '{nb_name}' registered successfully and available for deposits!")
+                st.success(f"Bank '{nb_name}' registered successfully!")
                 st.rerun()
 
-    # 4. سجل المعاملات
+    # 4. سجل المعاملات النظيف مع قسم إضافة منفصل في الأسفل
     with tab_hist:
         st.subheader("Bank Wire Transactions Log")
-        st.dataframe(pd.DataFrame(st.session_state.transactions_db), use_container_width=True, hide_index=True)
+        
+        # الجدول الرئيسي نظيف وثابت بدون أزرار داخلية
+        edited_trans = st.data_editor(
+            st.session_state.transactions_df,
+            num_rows="fixed",
+            use_container_width=True,
+            column_config={
+                "Type": st.column_config.SelectboxColumn("Type", options=["Deposit", "Withdrawal"]),
+                "Status": st.column_config.SelectboxColumn("Status", options=["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"]),
+                "Account": st.column_config.TextColumn("Account"),
+                "Amount": st.column_config.TextColumn("Amount"),
+                "Date": st.column_config.TextColumn("Date"),
+                "Method": st.column_config.TextColumn("Method")
+            }
+        )
+
+        if not edited_trans.equals(st.session_state.transactions_df):
+            st.session_state.transactions_df = edited_trans
+            st.rerun()
+
+        # قسم منزوي أسفل الجدول لإضافة معاملات مخصصة
+        with st.expander("➕ Add Custom Transaction / Entry"):
+            with st.form("add_custom_trans_form"):
+                col_tr1, col_tr2, col_tr3 = st.columns(3)
+                with col_tr1:
+                    t_id = st.text_input("Transaction ID", value=f"TXN-{np.random.randint(100000, 999999)}")
+                    t_date = st.text_input("Date (YYYY-MM-DD)", value=datetime.today().strftime('%Y-%m-%d'))
+                with col_tr2:
+                    t_type = st.selectbox("Type", ["Deposit", "Withdrawal"])
+                    t_method = st.selectbox("Method", [f"Bank Wire ({b})" for b in bank_names] + ["Bank Wire (Direct)"])
+                with col_tr3:
+                    t_amount = st.text_input("Amount (e.g. $15,000.00)", value="$10,000.00")
+                    t_acc = st.selectbox("Target Account", st.session_state.accounts_df['Account ID'].tolist())
+                
+                t_status = st.selectbox("Status", ["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
+                
+                add_t_btn = st.form_submit_button("Add to Transaction Log", type="primary")
+                if add_t_btn:
+                    new_custom_entry = pd.DataFrame([{
+                        "Transaction ID": t_id,
+                        "Date": t_date,
+                        "Type": t_type,
+                        "Method": t_method,
+                        "Amount": t_amount,
+                        "Account": t_acc,
+                        "Status": t_status
+                    }])
+                    st.session_state.transactions_df = pd.concat([st.session_state.transactions_df, new_custom_entry], ignore_index=True)
+                    st.success("Transaction added to log successfully!")
+                    st.rerun()
 
 # --------------------------------------------------
 # 📂 4. Upload Documents Screen
