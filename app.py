@@ -166,7 +166,6 @@ if menu_choice == "Accounts":
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Trading Accounts Matrix")
 
-    # جدول تعديل الخلايا الحالية فقط بدون صف إضافة فارغ في المنتصف
     edited_df = st.data_editor(
         st.session_state.accounts_df,
         num_rows="fixed",
@@ -185,8 +184,12 @@ if menu_choice == "Accounts":
         st.session_state.accounts_df = edited_df
         st.rerun()
 
-    # نموذج منزوي أسفل الجدول لإضافة حساب جديد
-    with st.expander("➕ Add New Trading Account"):
+    # زر + منزوي وصغير فقط
+    c_sp, c_btn = st.columns([12, 1])
+    with c_btn:
+        show_add_acc = st.button("➕", key="btn_add_acc_pop")
+
+    if show_add_acc:
         with st.form("add_acc_clean_form"):
             c_a1, c_a2, c_a3 = st.columns(3)
             with c_a1:
@@ -199,18 +202,16 @@ if menu_choice == "Accounts":
                 n_bal = st.number_input("Balance ($)", min_value=0.0, value=10000.0, step=1000.0)
                 n_pl = st.number_input("Daily P/L ($)", value=0.0, step=100.0)
             
-            btn_add_acc = st.form_submit_button("Create & Register Account", type="primary")
+            btn_add_acc = st.form_submit_button("Save Account", type="primary")
             if btn_add_acc and n_id:
                 new_acc_row = pd.DataFrame([{
                     "Account ID": n_id, "Server": n_srv, "Account Type": n_type,
                     "Deposit": n_dep, "Balance": n_bal, "Daily P/L": n_pl, "Status": "🔴 SUSPENDED"
                 }])
                 st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_acc_row], ignore_index=True)
-                st.success("Account added successfully!")
                 st.rerun()
 
     st.markdown("---")
-    
     st.subheader("Calculated Equity & Risk Summary")
     summary_view = pd.DataFrame({
         "Account ID": df['Account ID'],
@@ -278,7 +279,7 @@ elif menu_choice == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 3. Funds Screen (Clean Table + Bottom Add Section)
+# 📂 3. Funds Screen (Clean Log + Bottom Single '+' Button)
 # --------------------------------------------------
 elif menu_choice == "Funds":
     tab_dep, tab_with, tab_banks, tab_hist = st.tabs([
@@ -366,34 +367,35 @@ elif menu_choice == "Funds":
         st.subheader("Registered Bank Accounts")
         st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
         
-        st.markdown("---")
-        st.subheader("➕ Add New Bank Account")
-        with st.form("add_new_bank_form"):
-            nb_name = st.text_input("Bank Name", placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)")
-            nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
-            nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
-            nb_iban = st.text_input("IBAN Number", placeholder="AE...")
-            nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. ADCBAEAA")
-            nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
-            
-            add_b_btn = st.form_submit_button("Save New Bank Account", type="primary")
-            if add_b_btn and nb_name and nb_iban:
-                st.session_state.user_banks.append({
-                    "bank_name": nb_name,
-                    "account_title": nb_title,
-                    "iban": nb_iban,
-                    "account_number": nb_num,
-                    "currency": nb_curr,
-                    "swift": nb_swift
-                })
-                st.success(f"Bank '{nb_name}' registered successfully!")
-                st.rerun()
+        c_sp_b, c_btn_b = st.columns([12, 1])
+        with c_btn_b:
+            show_add_bank = st.button("➕", key="btn_add_bank_pop")
 
-    # 4. سجل المعاملات النظيف مع قسم إضافة منفصل في الأسفل
+        if show_add_bank:
+            with st.form("add_new_bank_form"):
+                nb_name = st.text_input("Bank Name", placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)")
+                nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
+                nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
+                nb_iban = st.text_input("IBAN Number", placeholder="AE...")
+                nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. ADCBAEAA")
+                nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
+                
+                add_b_btn = st.form_submit_button("Save Bank Account", type="primary")
+                if add_b_btn and nb_name and nb_iban:
+                    st.session_state.user_banks.append({
+                        "bank_name": nb_name,
+                        "account_title": nb_title,
+                        "iban": nb_iban,
+                        "account_number": nb_num,
+                        "currency": nb_curr,
+                        "swift": nb_swift
+                    })
+                    st.rerun()
+
+    # 4. سجل المعاملات مع زر '+' المنزوي
     with tab_hist:
         st.subheader("Bank Wire Transactions Log")
         
-        # الجدول الرئيسي نظيف وثابت بدون أزرار داخلية
         edited_trans = st.data_editor(
             st.session_state.transactions_df,
             num_rows="fixed",
@@ -412,8 +414,13 @@ elif menu_choice == "Funds":
             st.session_state.transactions_df = edited_trans
             st.rerun()
 
-        # قسم منزوي أسفل الجدول لإضافة معاملات مخصصة
-        with st.expander("➕ Add Custom Transaction / Entry"):
+        # زر + في الزاوية السفلية اليمينية فقط
+        c_space, c_add = st.columns([12, 1])
+        with c_add:
+            show_add_form = st.button("➕", key="btn_add_trans_pop")
+
+        # يفتح النموذج فقط عند الضغط على الزر الصغير +
+        if show_add_form:
             with st.form("add_custom_trans_form"):
                 col_tr1, col_tr2, col_tr3 = st.columns(3)
                 with col_tr1:
@@ -428,7 +435,7 @@ elif menu_choice == "Funds":
                 
                 t_status = st.selectbox("Status", ["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
                 
-                add_t_btn = st.form_submit_button("Add to Transaction Log", type="primary")
+                add_t_btn = st.form_submit_button("Add Transaction", type="primary")
                 if add_t_btn:
                     new_custom_entry = pd.DataFrame([{
                         "Transaction ID": t_id,
@@ -440,7 +447,6 @@ elif menu_choice == "Funds":
                         "Status": t_status
                     }])
                     st.session_state.transactions_df = pd.concat([st.session_state.transactions_df, new_custom_entry], ignore_index=True)
-                    st.success("Transaction added to log successfully!")
                     st.rerun()
 
 # --------------------------------------------------
