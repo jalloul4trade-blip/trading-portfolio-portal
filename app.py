@@ -32,7 +32,6 @@ st.markdown("""
         border-right: 1px solid #1e293b;
     }
     
-    /* تنسيق شعار GT في القائمة الجانبية */
     .gt-logo-box {
         display: flex;
         align-items: center;
@@ -61,17 +60,16 @@ st.markdown("""
         color: #00c853;
     }
 
-    /* تكبير خطوط خيارات القائمة */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: 600 !important;
-        padding: 8px 12px !important;
+        padding: 6px 12px !important;
         color: #cbd5e1 !important;
         border-radius: 8px;
         transition: all 0.2s;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
-        color: #00c853 !important;
+        color: #00e676 !important;
         background: rgba(255, 255, 255, 0.05);
     }
     
@@ -146,7 +144,7 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "7701924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
         {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
@@ -177,7 +175,7 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu (GT Branded)
+# 🧭 Sidebar Menu (With Exact Funds Dropdown Options)
 # --------------------------------------------------
 with st.sidebar:
     st.markdown("""
@@ -187,19 +185,36 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:10px;'>TRADER'S MENU</p>", unsafe_allow_html=True)
-    menu_choice = st.radio(
-        label="Trader Menu Options",
+    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;'>TRADER'S MENU</p>", unsafe_allow_html=True)
+    
+    main_nav = st.radio(
+        label="Main Section",
         options=["Accounts", "Funds", "My Profile", "Downloads", "Economic Calendar"],
         index=0,
         label_visibility="collapsed"
     )
     
+    funds_sub_choice = "Wallet Accounts"
+    if main_nav == "Funds":
+        st.markdown("<p style='color:#00e676; font-size:11px; font-weight:700; margin: 10px 0 4px 10px;'>FUNDS MANAGEMENT</p>", unsafe_allow_html=True)
+        funds_sub_choice = st.radio(
+            label="Funds Submenu",
+            options=["Wallet Accounts", "Deposit Funds", "Withdraw Funds", "Transfer Funds", "Transactions History", "Payment Details"],
+            index=0,
+            label_visibility="collapsed"
+        )
+    
     st.markdown("<br><hr style='border:none; border-bottom:1px solid #1e293b;'><br>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:10px;'>IB MENU</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;'>IB MENU</p>", unsafe_allow_html=True)
     ib_choice = st.checkbox("💼 Request IB")
-    if ib_choice:
-        menu_choice = "Request IB"
+
+# تحديد الصفحة الحالية
+if ib_choice:
+    active_page = "Request IB"
+elif main_nav == "Funds":
+    active_page = f"Funds - {funds_sub_choice}"
+else:
+    active_page = main_nav
 
 # --------------------------------------------------
 # 🔝 Top Navigation Bar & Action Buttons
@@ -208,12 +223,12 @@ prof = st.session_state.profile_data
 
 col_top_l, col_top_r = st.columns([1.5, 1.5])
 with col_top_l:
-    st.markdown(f"<div style='padding-top:8px; font-size:15px;'>☰ &nbsp;&nbsp; <b>Home</b> / Trader's Menu / <b>{menu_choice}</b></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='padding-top:8px; font-size:15px;'>☰ &nbsp;&nbsp; <b>Home</b> / Trader's Menu / <b>{active_page}</b></div>", unsafe_allow_html=True)
 
 with col_top_r:
     st.markdown(f"""
     <div style='text-align:right; font-size:14px; display:flex; align-items:center; justify-content:flex-end; gap:18px;'>
-        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00c853; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
+        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
         <span>🇬🇧</span>
         <span>✉️ Messages</span>
         <span>🎧 Help Desk</span>
@@ -226,7 +241,7 @@ st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 # --------------------------------------------------
 # 📂 1. Accounts Screen
 # --------------------------------------------------
-if menu_choice == "Accounts":
+if active_page == "Accounts":
     
     @st.dialog("Trading Account Specifications & Credentials")
     def show_acc_details(acc_id):
@@ -315,7 +330,7 @@ if menu_choice == "Accounts":
 
     with c_head_btn2:
         if st.button("💳 Deposit Funds", type="primary", use_container_width=True):
-            st.info("Navigate to the 'Funds' tab on the sidebar to proceed with bank deposits.")
+            st.info("Select Deposit Funds from the sidebar menu to proceed.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -388,9 +403,208 @@ if menu_choice == "Accounts":
     st.dataframe(summary_view, use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 2. Downloads Screen
+# 📂 2. Funds - Wallet Accounts (Exact Match to Screenshot)
 # --------------------------------------------------
-elif menu_choice == "Downloads":
+elif active_page == "Funds - Wallet Accounts":
+    st.subheader("Wallet Accounts")
+    
+    wallet_df = pd.DataFrame([
+        {"Account Type": "Wallet", "Wallet Number": "10208", "Currency": "USD", "Balance": "$0.00", "Action": "🗂️ History"}
+    ])
+    st.dataframe(wallet_df, use_container_width=True, hide_index=True)
+
+# --------------------------------------------------
+# 📂 3. Funds - Deposit Funds
+# --------------------------------------------------
+elif active_page == "Funds - Deposit Funds":
+    st.subheader("Deposit Capital via Direct Bank Wire")
+    col_d1, col_d2 = st.columns([1.2, 1])
+    
+    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+    with col_d1:
+        with st.form("dep_bank_form"):
+            acc_target = st.selectbox("Select Target Account", st.session_state.accounts_df['Account ID'].tolist())
+            selected_bank_name = st.selectbox("Select Sending / Receiving Bank", bank_names)
+            dep_val = st.number_input("Deposit Amount ($)", min_value=100.0, value=10000.0, step=1000.0)
+            dep_ref = st.text_input("Bank Transfer Reference / Note", value=f"GT-{prof['client_id']}")
+            
+            dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
+            if dep_sub:
+                new_row = pd.DataFrame([{
+                    "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
+                    "Date": datetime.today().strftime('%Y-%m-%d'),
+                    "Type": "Deposit",
+                    "Method": f"Bank Wire ({selected_bank_name})",
+                    "Amount": f"${dep_val:,.2f}",
+                    "Account": acc_target,
+                    "Status": "Completed 🟢"
+                }])
+                st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
+                
+                idx = st.session_state.accounts_df.index[st.session_state.accounts_df['Account ID'] == acc_target].tolist()[0]
+                st.session_state.accounts_df.at[idx, 'Deposit'] += dep_val
+                st.session_state.accounts_df.at[idx, 'Balance'] += dep_val
+                
+                st.success(f"Deposit of ${dep_val:,.2f} confirmed and added to Account {acc_target}!")
+                st.rerun()
+
+    with col_d2:
+        curr_b = next(b for b in st.session_state.user_banks if b['bank_name'] == selected_bank_name)
+        st.markdown(f"""
+        <div class="portal-card">
+            <h4 style="margin-top:0;">{curr_b['bank_name']} Details</h4>
+            <p style="color:#64748b; font-size:13px; line-height:1.7;">
+                • <b>Account Name:</b> {curr_b['account_title']}<br>
+                • <b>Account Number:</b> {curr_b['account_number']}<br>
+                • <b>IBAN:</b> {curr_b['iban']}<br>
+                • <b>SWIFT / BIC:</b> {curr_b['swift']}<br>
+                • <b>Currency:</b> {curr_b['currency']}<br>
+                • <b>Processing Time:</b> Same-day Institutional Wire
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --------------------------------------------------
+# 📂 4. Funds - Withdraw Funds
+# --------------------------------------------------
+elif active_page == "Funds - Withdraw Funds":
+    st.subheader("Request Capital Withdrawal to Bank Account")
+    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+    with st.form("with_bank_form"):
+        w_acc = st.selectbox("From Trading Account", st.session_state.accounts_df['Account ID'].tolist())
+        w_bank = st.selectbox("Select Destination Bank", bank_names)
+        
+        b_info = next(b for b in st.session_state.user_banks if b['bank_name'] == w_bank)
+        st.info(f"Transferring to: {b_info['bank_name']} | IBAN: {b_info['iban']}")
+        
+        w_val = st.number_input("Withdrawal Amount ($)", min_value=100.0, value=5000.0, step=500.0)
+        w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
+        if w_sub:
+            new_row = pd.DataFrame([{
+                "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
+                "Date": datetime.today().strftime('%Y-%m-%d'),
+                "Type": "Withdrawal",
+                "Method": f"Bank Wire ({w_bank})",
+                "Amount": f"${w_val:,.2f}",
+                "Account": w_acc,
+                "Status": "Processing 🟡"
+            }])
+            st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
+            st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
+            st.rerun()
+
+# --------------------------------------------------
+# 📂 5. Funds - Transfer Funds
+# --------------------------------------------------
+elif active_page == "Funds - Transfer Funds":
+    st.subheader("Internal Capital Transfer")
+    with st.form("internal_transfer_form"):
+        col_tr1, col_tr2 = st.columns(2)
+        with col_tr1:
+            tr_from = st.selectbox("Transfer From", ["Wallet (10208)"] + st.session_state.accounts_df['Account ID'].tolist())
+        with col_tr2:
+            tr_to = st.selectbox("Transfer To", st.session_state.accounts_df['Account ID'].tolist() + ["Wallet (10208)"])
+        
+        tr_amt = st.number_input("Transfer Amount ($)", min_value=10.0, value=1000.0, step=100.0)
+        tr_btn = st.form_submit_button("Execute Transfer", type="primary")
+        if tr_btn:
+            st.success(f"Successfully transferred ${tr_amt:,.2f} from {tr_from} to {tr_to} instantly.")
+
+# --------------------------------------------------
+# 📂 6. Funds - Transactions History
+# --------------------------------------------------
+elif active_page == "Funds - Transactions History":
+    st.subheader("Bank Wire Transactions Log")
+    
+    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+    
+    edited_trans = st.data_editor(
+        st.session_state.transactions_df,
+        num_rows="fixed",
+        use_container_width=True,
+        column_config={
+            "Type": st.column_config.SelectboxColumn("Type", options=["Deposit", "Withdrawal"]),
+            "Status": st.column_config.SelectboxColumn("Status", options=["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"]),
+            "Account": st.column_config.TextColumn("Account"),
+            "Amount": st.column_config.TextColumn("Amount"),
+            "Date": st.column_config.TextColumn("Date"),
+            "Method": st.column_config.TextColumn("Method")
+        }
+    )
+
+    if not edited_trans.equals(st.session_state.transactions_df):
+        st.session_state.transactions_df = edited_trans
+        st.rerun()
+
+    c_space, c_add = st.columns([12, 1])
+    with c_add:
+        show_add_form = st.button("➕", key="btn_add_trans_pop")
+
+    if show_add_form:
+        with st.form("add_custom_trans_form"):
+            col_tr1, col_tr2, col_tr3 = st.columns(3)
+            with col_tr1:
+                t_id = st.text_input("Transaction ID", value=f"TXN-{np.random.randint(100000, 999999)}")
+                t_date = st.text_input("Date (YYYY-MM-DD)", value=datetime.today().strftime('%Y-%m-%d'))
+            with col_tr2:
+                t_type = st.selectbox("Type", ["Deposit", "Withdrawal"])
+                t_method = st.selectbox("Method", [f"Bank Wire ({b})" for b in bank_names] + ["Bank Wire (Direct)"])
+            with col_tr3:
+                t_amount = st.text_input("Amount (e.g. $15,000.00)", value="$10,000.00")
+                t_acc = st.selectbox("Target Account", st.session_state.accounts_df['Account ID'].tolist())
+            
+            t_status = st.selectbox("Status", ["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
+            
+            add_t_btn = st.form_submit_button("Add Transaction", type="primary")
+            if add_t_btn:
+                new_custom_entry = pd.DataFrame([{
+                    "Transaction ID": t_id,
+                    "Date": t_date,
+                    "Type": t_type,
+                    "Method": t_method,
+                    "Amount": t_amount,
+                    "Account": t_acc,
+                    "Status": t_status
+                }])
+                st.session_state.transactions_df = pd.concat([st.session_state.transactions_df, new_custom_entry], ignore_index=True)
+                st.rerun()
+
+# --------------------------------------------------
+# 📂 7. Funds - Payment Details
+# --------------------------------------------------
+elif active_page == "Funds - Payment Details":
+    st.subheader("Registered Settlement Bank Accounts")
+    st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
+    
+    c_sp_b, c_btn_b = st.columns([12, 1])
+    with c_btn_b:
+        show_add_bank = st.button("➕", key="btn_add_bank_pop")
+
+    if show_add_bank:
+        with st.form("add_new_bank_form"):
+            nb_name = st.text_input("Bank Name", placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)")
+            nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
+            nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
+            nb_iban = st.text_input("IBAN Number", placeholder="AE...")
+            nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. ADCBAEAA")
+            nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
+            
+            add_b_btn = st.form_submit_button("Save Bank Account", type="primary")
+            if add_b_btn and nb_name and nb_iban:
+                st.session_state.user_banks.append({
+                    "bank_name": nb_name,
+                    "account_title": nb_title,
+                    "iban": nb_iban,
+                    "account_number": nb_num,
+                    "currency": nb_curr,
+                    "swift": nb_swift
+                })
+                st.rerun()
+
+# --------------------------------------------------
+# 📂 8. Downloads Screen
+# --------------------------------------------------
+elif active_page == "Downloads":
     col_dl1, col_dl2 = st.columns(2)
     
     with col_dl1:
@@ -442,9 +656,9 @@ elif menu_choice == "Downloads":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 3. My Profile Screen
+# 📂 9. My Profile Screen
 # --------------------------------------------------
-elif menu_choice == "My Profile":
+elif active_page == "My Profile":
     col_prof_l, col_prof_r = st.columns([1.3, 1], gap="large")
     
     with col_prof_l:
@@ -497,174 +711,9 @@ elif menu_choice == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 4. Funds Screen
+# 📂 10. Economic Calendar Screen
 # --------------------------------------------------
-elif menu_choice == "Funds":
-    tab_dep, tab_with, tab_banks, tab_hist = st.tabs([
-        "📥 Bank Deposit", "📤 Bank Withdrawal", "🏛️ Registered Bank Accounts", "📜 Transaction History"
-    ])
-    
-    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
-
-    with tab_dep:
-        st.subheader("Deposit Capital via Direct Bank Wire")
-        col_d1, col_d2 = st.columns([1.2, 1])
-        
-        with col_d1:
-            with st.form("dep_bank_form"):
-                acc_target = st.selectbox("Select Target Account", st.session_state.accounts_df['Account ID'].tolist())
-                selected_bank_name = st.selectbox("Select Sending / Receiving Bank", bank_names)
-                dep_val = st.number_input("Deposit Amount ($)", min_value=100.0, value=10000.0, step=1000.0)
-                dep_ref = st.text_input("Bank Transfer Reference / Note", value=f"GT-{prof['client_id']}")
-                
-                dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
-                if dep_sub:
-                    new_row = pd.DataFrame([{
-                        "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
-                        "Date": datetime.today().strftime('%Y-%m-%d'),
-                        "Type": "Deposit",
-                        "Method": f"Bank Wire ({selected_bank_name})",
-                        "Amount": f"${dep_val:,.2f}",
-                        "Account": acc_target,
-                        "Status": "Completed 🟢"
-                    }])
-                    st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
-                    
-                    idx = st.session_state.accounts_df.index[st.session_state.accounts_df['Account ID'] == acc_target].tolist()[0]
-                    st.session_state.accounts_df.at[idx, 'Deposit'] += dep_val
-                    st.session_state.accounts_df.at[idx, 'Balance'] += dep_val
-                    
-                    st.success(f"Deposit of ${dep_val:,.2f} confirmed and added to Account {acc_target}!")
-                    st.rerun()
-
-        with col_d2:
-            curr_b = next(b for b in st.session_state.user_banks if b['bank_name'] == selected_bank_name)
-            st.markdown(f"""
-            <div class="portal-card">
-                <h4 style="margin-top:0;">{curr_b['bank_name']} Details</h4>
-                <p style="color:#64748b; font-size:13px; line-height:1.7;">
-                    • <b>Account Name:</b> {curr_b['account_title']}<br>
-                    • <b>Account Number:</b> {curr_b['account_number']}<br>
-                    • <b>IBAN:</b> {curr_b['iban']}<br>
-                    • <b>SWIFT / BIC:</b> {curr_b['swift']}<br>
-                    • <b>Currency:</b> {curr_b['currency']}<br>
-                    • <b>Processing Time:</b> Same-day Institutional Wire
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    with tab_with:
-        st.subheader("Request Capital Withdrawal to Bank Account")
-        with st.form("with_bank_form"):
-            w_acc = st.selectbox("From Trading Account", st.session_state.accounts_df['Account ID'].tolist())
-            w_bank = st.selectbox("Select Destination Bank", bank_names)
-            
-            b_info = next(b for b in st.session_state.user_banks if b['bank_name'] == w_bank)
-            st.info(f"Transferring to: {b_info['bank_name']} | IBAN: {b_info['iban']}")
-            
-            w_val = st.number_input("Withdrawal Amount ($)", min_value=100.0, value=5000.0, step=500.0)
-            w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
-            if w_sub:
-                new_row = pd.DataFrame([{
-                    "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
-                    "Date": datetime.today().strftime('%Y-%m-%d'),
-                    "Type": "Withdrawal",
-                    "Method": f"Bank Wire ({w_bank})",
-                    "Amount": f"${w_val:,.2f}",
-                    "Account": w_acc,
-                    "Status": "Processing 🟡"
-                }])
-                st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
-                st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
-                st.rerun()
-
-    with tab_banks:
-        st.subheader("Registered Bank Accounts")
-        st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
-        
-        c_sp_b, c_btn_b = st.columns([12, 1])
-        with c_btn_b:
-            show_add_bank = st.button("➕", key="btn_add_bank_pop")
-
-        if show_add_bank:
-            with st.form("add_new_bank_form"):
-                nb_name = st.text_input("Bank Name", placeholder="e.g. Abu Dhabi Commercial Bank (ADCB)")
-                nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
-                nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
-                nb_iban = st.text_input("IBAN Number", placeholder="AE...")
-                nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. ADCBAEAA")
-                nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
-                
-                add_b_btn = st.form_submit_button("Save Bank Account", type="primary")
-                if add_b_btn and nb_name and nb_iban:
-                    st.session_state.user_banks.append({
-                        "bank_name": nb_name,
-                        "account_title": nb_title,
-                        "iban": nb_iban,
-                        "account_number": nb_num,
-                        "currency": nb_curr,
-                        "swift": nb_swift
-                    })
-                    st.rerun()
-
-    with tab_hist:
-        st.subheader("Bank Wire Transactions Log")
-        
-        edited_trans = st.data_editor(
-            st.session_state.transactions_df,
-            num_rows="fixed",
-            use_container_width=True,
-            column_config={
-                "Type": st.column_config.SelectboxColumn("Type", options=["Deposit", "Withdrawal"]),
-                "Status": st.column_config.SelectboxColumn("Status", options=["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"]),
-                "Account": st.column_config.TextColumn("Account"),
-                "Amount": st.column_config.TextColumn("Amount"),
-                "Date": st.column_config.TextColumn("Date"),
-                "Method": st.column_config.TextColumn("Method")
-            }
-        )
-
-        if not edited_trans.equals(st.session_state.transactions_df):
-            st.session_state.transactions_df = edited_trans
-            st.rerun()
-
-        c_space, c_add = st.columns([12, 1])
-        with c_add:
-            show_add_form = st.button("➕", key="btn_add_trans_pop")
-
-        if show_add_form:
-            with st.form("add_custom_trans_form"):
-                col_tr1, col_tr2, col_tr3 = st.columns(3)
-                with col_tr1:
-                    t_id = st.text_input("Transaction ID", value=f"TXN-{np.random.randint(100000, 999999)}")
-                    t_date = st.text_input("Date (YYYY-MM-DD)", value=datetime.today().strftime('%Y-%m-%d'))
-                with col_tr2:
-                    t_type = st.selectbox("Type", ["Deposit", "Withdrawal"])
-                    t_method = st.selectbox("Method", [f"Bank Wire ({b})" for b in bank_names] + ["Bank Wire (Direct)"])
-                with col_tr3:
-                    t_amount = st.text_input("Amount (e.g. $15,000.00)", value="$10,000.00")
-                    t_acc = st.selectbox("Target Account", st.session_state.accounts_df['Account ID'].tolist())
-                
-                t_status = st.selectbox("Status", ["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
-                
-                add_t_btn = st.form_submit_button("Add Transaction", type="primary")
-                if add_t_btn:
-                    new_custom_entry = pd.DataFrame([{
-                        "Transaction ID": t_id,
-                        "Date": t_date,
-                        "Type": t_type,
-                        "Method": t_method,
-                        "Amount": t_amount,
-                        "Account": t_acc,
-                        "Status": t_status
-                    }])
-                    st.session_state.transactions_df = pd.concat([st.session_state.transactions_df, new_custom_entry], ignore_index=True)
-                    st.rerun()
-
-# --------------------------------------------------
-# 📂 5. Economic Calendar Screen
-# --------------------------------------------------
-elif menu_choice == "Economic Calendar":
+elif active_page == "Economic Calendar":
     st.subheader("High-Impact Market Calendar (GMT+4)")
     calendar_events = [
         {"Time": "16:30", "Currency": "USD", "Event": "Core PCE Price Index (MoM)", "Impact": "🔴 High", "Forecast": "0.2%", "Previous": "0.2%"},
@@ -675,9 +724,9 @@ elif menu_choice == "Economic Calendar":
     st.dataframe(pd.DataFrame(calendar_events), use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 6. Request IB Screen
+# 📂 11. Request IB Screen
 # --------------------------------------------------
-elif menu_choice == "Request IB":
+elif active_page == "Request IB":
     st.subheader("Introducing Broker (IB) & Partner Portal")
     col_ib1, col_ib2, col_ib3 = st.columns(3)
     col_ib1.metric("Active Sub-Accounts", "14 Accounts", "+2 this month")
