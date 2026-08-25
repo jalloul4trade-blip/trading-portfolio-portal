@@ -148,8 +148,17 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
+# البنوك المعتمدة بما فيها Invest Bank (INB)
 if 'user_banks' not in st.session_state:
     st.session_state.user_banks = [
+        {
+            "bank_name": "Invest Bank (INB)",
+            "account_title": "Hasan Yousef Jalloul",
+            "iban": "AE550180000000551122334",
+            "account_number": "18009941033",
+            "currency": "AED / USD",
+            "swift": "INVBAEAD"
+        },
         {
             "bank_name": "First Abu Dhabi Bank (FAB)",
             "account_title": "Hasan Yousef Jalloul",
@@ -175,7 +184,7 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu (Includes GT Platform Option)
+# 🧭 Sidebar Menu
 # --------------------------------------------------
 with st.sidebar:
     st.markdown("""
@@ -402,11 +411,10 @@ if active_page == "Accounts":
     st.dataframe(summary_view, use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 2. GT Platform (TradingView Gateway with Modal)
+# 📂 2. GT Platform (TradingView Gateway)
 # --------------------------------------------------
 elif active_page == "GT Platform":
     st.subheader("GT Institutional Trading Terminal")
-    
     st.markdown("""
     <div class="portal-card" style="text-align: center; padding: 40px 20px;">
         <h2 style="color: #0f172a; margin-bottom: 10px;">Direct Market Execution & Advanced Charting</h2>
@@ -510,33 +518,30 @@ elif active_page == "Funds - Deposit Funds":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 5. Funds - Withdraw Funds
+# 📂 5. Funds - Withdraw Funds (Conditional Responses)
 # --------------------------------------------------
 elif active_page == "Funds - Withdraw Funds":
     st.subheader("Request Capital Withdrawal to Bank Account")
     bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+    
     with st.form("with_bank_form"):
         w_acc = st.selectbox("From Trading Account", st.session_state.accounts_df['Account ID'].tolist())
         w_bank = st.selectbox("Select Destination Bank", bank_names)
         
         b_info = next(b for b in st.session_state.user_banks if b['bank_name'] == w_bank)
-        st.info(f"Transferring to: {b_info['bank_name']} | IBAN: {b_info['iban']}")
+        st.info(f"Target Destination: {b_info['bank_name']} | IBAN: {b_info['iban']}")
         
         w_val = st.number_input("Withdrawal Amount ($)", min_value=100.0, value=5000.0, step=500.0)
         w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
+        
         if w_sub:
-            new_row = pd.DataFrame([{
-                "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
-                "Date": datetime.today().strftime('%Y-%m-%d'),
-                "Type": "Withdrawal",
-                "Method": f"Bank Wire ({w_bank})",
-                "Amount": f"${w_val:,.2f}",
-                "Account": w_acc,
-                "Status": "Processing 🟡"
-            }])
-            st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
-            st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
-            st.rerun()
+            # 1. حالة بنك الاستثمار INB: الخدمة غير متوفرة
+            if "Invest Bank" in w_bank or "INB" in w_bank:
+                st.warning("⚠️ **Service Temporarily Unavailable:** Automated wire routing to Invest Bank (INB) is currently undergoing scheduled network maintenance. Please select an alternative settlement bank.")
+            
+            # 2. حالة باقي البنوك: الرفض لأن الحساب معلق
+            else:
+                st.error("🔴 **Withdrawal Request Declined:** Transactions are currently disabled because the selected trading account is in **SUSPENDED / INACTIVE** state. Please contact compliance to reactivate.")
 
 # --------------------------------------------------
 # 📂 6. Funds - Transfer Funds
@@ -553,7 +558,7 @@ elif active_page == "Funds - Transfer Funds":
         tr_amt = st.number_input("Transfer Amount ($)", min_value=10.0, value=1000.0, step=100.0)
         tr_btn = st.form_submit_button("Execute Transfer", type="primary")
         if tr_btn:
-            st.success(f"Successfully transferred ${tr_amt:,.2f} from {tr_from} to {tr_to} instantly.")
+            st.error("🔴 Transfer Error: Internal transfers are locked due to account suspension status.")
 
 # --------------------------------------------------
 # 📂 7. Funds - Transactions History
