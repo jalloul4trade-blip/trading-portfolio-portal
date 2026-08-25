@@ -128,7 +128,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 🗄️ Editable Session Database
+# 🗄️ Editable Session Database (Permanent Saved Defaults)
 # --------------------------------------------------
 if 'profile_data' not in st.session_state:
     st.session_state.profile_data = {
@@ -144,8 +144,8 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
-        {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8901924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8940215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 22442.0, "Balance": 22442.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
 # البنوك المعتمدة
@@ -176,12 +176,19 @@ st.session_state.user_banks = [
     }
 ]
 
-# سجل المعاملات الأساسي
+# سجل المعاملات الدائم المحفوظ بالكامل
 if 'transactions_permanent' not in st.session_state:
     st.session_state.transactions_permanent = [
-        {"Transaction ID": "TXN-714007", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (Invest Bank (INB))", "Amount": "$3,998.00", "Account": "8901924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-642712", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$2,106.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-587045", "Date": "2026-08-24", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$2,765.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-348403", "Date": "2026-08-23", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-684114", "Date": "2026-08-22", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-949056", "Date": "2026-08-21", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-388564", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-377309", "Date": "2026-08-19", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-574954", "Date": "2026-08-18", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$4,705.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-274666", "Date": "2026-08-17", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$2,000.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-434712", "Date": "2026-08-16", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
     ]
 
 # --------------------------------------------------
@@ -559,14 +566,13 @@ elif active_page == "Funds - Transfer Funds":
             st.error("🔴 Transfer Error: Internal transfers are locked due to account suspension status.")
 
 # --------------------------------------------------
-# 📂 7. Funds - Transactions History (Editable + Delete on '0')
+# 📂 7. Funds - Transactions History (Saved Permanent Log)
 # --------------------------------------------------
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
     
     bank_options = [f"Bank Wire ({b['bank_name']})" for b in st.session_state.user_banks] + ["Bank Wire (Direct)"]
     
-    # نافذة إضافة معاملة منبثقة ومخفية
     @st.dialog("➕ Add New Bank Transaction Record")
     def open_add_tx_dialog():
         with st.form("modal_add_tx_form"):
@@ -601,7 +607,6 @@ elif active_page == "Funds - Transactions History":
 
     current_df = pd.DataFrame(st.session_state.transactions_permanent)
 
-    # جدول تفاعلي بالكامل: عند تغيير Transaction ID إلى 0 يُحذف الصف فوراً
     edited_tx_df = st.data_editor(
         current_df,
         num_rows="fixed",
@@ -617,14 +622,11 @@ elif active_page == "Funds - Transactions History":
         }
     )
 
-    # فحص إذا تم كتابة 0 لحذف أي معاملة أو تعديل أي قيمة
     if not edited_tx_df.equals(current_df):
-        # تصفية وحذف أي صف يحتوي على 0 أو فارغ في خانة Transaction ID
         filtered_df = edited_tx_df[~edited_tx_df['Transaction ID'].astype(str).str.strip().isin(['0', '0.0', ''])]
         st.session_state.transactions_permanent = filtered_df.to_dict('records')
         st.rerun()
 
-    # زر + صغير ومنزوي جداً في أسفل يمين الجدول
     col_empty_space, col_tiny_btn = st.columns([15, 1])
     with col_tiny_btn:
         if st.button("➕", key="tiny_add_tx_btn", help="Add Transaction"):
