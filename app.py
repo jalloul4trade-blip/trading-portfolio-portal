@@ -17,10 +17,20 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# 🎨 Official Client Portal Styling & GT Branding
+# 🎨 Official Client Portal Styling (Hiding Streamlit Badges & Manage App)
 # --------------------------------------------------
 st.markdown("""
 <style>
+    /* إخفاء زر Manage app وأي شريط سفلي لـ Streamlit بالكامل */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    div[data-testid="stStatusWidget"] {visibility: hidden;}
+    .viewerBadge_container__1QSob, .viewerBadge_link__1S137, [data-testid="manage-app-button"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
     .stApp {
         background-color: #f8fafc;
         color: #1e293b;
@@ -128,7 +138,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 🗄️ Editable Session Database (Permanent Saved Defaults)
+# 🗄️ Permanent Saved Database (Matching All Screenshots & CSV)
 # --------------------------------------------------
 if 'profile_data' not in st.session_state:
     st.session_state.profile_data = {
@@ -142,10 +152,12 @@ if 'profile_data' not in st.session_state:
         "country": "United Arab Emirates"
     }
 
+# الحسابات الثلاثة الثابتة
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
         {"Account ID": "8901924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
-        {"Account ID": "8940215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 22442.0, "Balance": 22442.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8940215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "9055071", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 3998.0, "Balance": 3998.0, "Profit / Loss": 0.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
 # البنوك المعتمدة
@@ -176,14 +188,20 @@ st.session_state.user_banks = [
     }
 ]
 
-# سجل المعاملات الدائم المحفوظ بالكامل
+# سجل المعاملات الدائم والمطابق لملف CSV الـ 16 عملية بالكامل
 if 'transactions_permanent' not in st.session_state:
     st.session_state.transactions_permanent = [
-        {"Transaction ID": "TXN-642712", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$2,106.00", "Account": "8901924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-587045", "Date": "2026-08-24", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$2,765.00", "Account": "8901924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-348403", "Date": "2026-08-23", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-684114", "Date": "2026-08-22", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-949056", "Date": "2026-08-21", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-554498", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$49.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-683858", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$2,997.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-510619", "Date": "2026-08-24", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$1,515.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-143649", "Date": "2026-08-24", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$2,997.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-722448", "Date": "2026-08-23", "Type": "Withdrawal", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$1,374.00", "Account": "8940215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-780128", "Date": "2026-08-23", "Type": "Withdrawal", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$1,374.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-642712", "Date": "2026-08-22", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$2,106.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-587045", "Date": "2026-08-22", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$2,765.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-348403", "Date": "2026-08-21", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-684114", "Date": "2026-08-21", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8901924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-949056", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-388564", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-377309", "Date": "2026-08-19", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$6,811.00", "Account": "8940215", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-574954", "Date": "2026-08-18", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$4,705.00", "Account": "8901924", "Status": "Completed 🟢"},
@@ -566,7 +584,7 @@ elif active_page == "Funds - Transfer Funds":
             st.error("🔴 Transfer Error: Internal transfers are locked due to account suspension status.")
 
 # --------------------------------------------------
-# 📂 7. Funds - Transactions History (Saved Permanent Log)
+# 📂 7. Funds - Transactions History (Permanent 16 Transactions Log)
 # --------------------------------------------------
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
