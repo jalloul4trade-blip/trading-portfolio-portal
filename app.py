@@ -148,34 +148,37 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
-# البنوك المعتمدة بما فيها Invest Bank (INB)
-if 'user_banks' not in st.session_state:
-    st.session_state.user_banks = [
-        {
-            "bank_name": "Invest Bank (INB)",
-            "account_title": "Hasan Yousef Jalloul",
-            "iban": "AE550180000000551122334",
-            "account_number": "18009941033",
-            "currency": "AED / USD",
-            "swift": "INVBAEAD"
-        },
-        {
-            "bank_name": "First Abu Dhabi Bank (FAB)",
-            "account_title": "Hasan Yousef Jalloul",
-            "iban": "AE440330000000123456789",
-            "account_number": "10408824101",
-            "currency": "AED / USD",
-            "swift": "FABAAEAD"
-        },
-        {
-            "bank_name": "Emirates Islamic Bank (EIB)",
-            "account_title": "Hasan Yousef Jalloul",
-            "iban": "AE880240000000987654321",
-            "account_number": "40207791402",
-            "currency": "AED / USD",
-            "swift": "EBILAEAD"
-        }
-    ]
+# البنوك المعتمدة المحدثة تلقائياً
+DEFAULT_BANKS = [
+    {
+        "bank_name": "Invest Bank (INB)",
+        "account_title": "Hasan Yousef Jalloul",
+        "iban": "AE550180000000551122334",
+        "account_number": "18009941033",
+        "currency": "AED / USD",
+        "swift": "INVBAEAD"
+    },
+    {
+        "bank_name": "First Abu Dhabi Bank (FAB)",
+        "account_title": "Hasan Yousef Jalloul",
+        "iban": "AE440330000000123456789",
+        "account_number": "10408824101",
+        "currency": "AED / USD",
+        "swift": "FABAAEAD"
+    },
+    {
+        "bank_name": "Emirates Islamic Bank (EIB)",
+        "account_title": "Hasan Yousef Jalloul",
+        "iban": "AE880240000000987654321",
+        "account_number": "40207791402",
+        "currency": "AED / USD",
+        "swift": "EBILAEAD"
+    }
+]
+
+# التأكد الدائم من وجود Invest Bank في الجلسة
+if 'user_banks' not in st.session_state or not any('Invest Bank' in b['bank_name'] for b in st.session_state.user_banks):
+    st.session_state.user_banks = DEFAULT_BANKS
 
 if 'transactions_df' not in st.session_state:
     st.session_state.transactions_df = pd.DataFrame([
@@ -566,7 +569,7 @@ elif active_page == "Funds - Transfer Funds":
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
     
-    bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+    bank_options = [f"Bank Wire ({b['bank_name']})" for b in st.session_state.user_banks] + ["Bank Wire (Direct)"]
     
     edited_trans = st.data_editor(
         st.session_state.transactions_df,
@@ -578,7 +581,7 @@ elif active_page == "Funds - Transactions History":
             "Account": st.column_config.TextColumn("Account"),
             "Amount": st.column_config.TextColumn("Amount"),
             "Date": st.column_config.TextColumn("Date"),
-            "Method": st.column_config.TextColumn("Method")
+            "Method": st.column_config.SelectboxColumn("Method", options=bank_options)
         }
     )
 
@@ -598,7 +601,7 @@ elif active_page == "Funds - Transactions History":
                 t_date = st.text_input("Date (YYYY-MM-DD)", value=datetime.today().strftime('%Y-%m-%d'))
             with col_tr2:
                 t_type = st.selectbox("Type", ["Deposit", "Withdrawal"])
-                t_method = st.selectbox("Method", [f"Bank Wire ({b})" for b in bank_names] + ["Bank Wire (Direct)"])
+                t_method = st.selectbox("Method", bank_options)
             with col_tr3:
                 t_amount = st.text_input("Amount (e.g. $15,000.00)", value="$10,000.00")
                 t_acc = st.selectbox("Target Account", st.session_state.accounts_df['Account ID'].tolist())
