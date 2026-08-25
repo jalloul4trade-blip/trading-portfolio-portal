@@ -148,7 +148,6 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
-# البنوك المعتمدة المحدثة تلقائياً
 DEFAULT_BANKS = [
     {
         "bank_name": "Invest Bank (INB)",
@@ -176,15 +175,14 @@ DEFAULT_BANKS = [
     }
 ]
 
-# التأكد الدائم من وجود Invest Bank في الجلسة
 if 'user_banks' not in st.session_state or not any('Invest Bank' in b['bank_name'] for b in st.session_state.user_banks):
     st.session_state.user_banks = DEFAULT_BANKS
 
-if 'transactions_df' not in st.session_state:
-    st.session_state.transactions_df = pd.DataFrame([
-        {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (FAB)", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic)", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
-    ])
+if 'transactions_list' not in st.session_state:
+    st.session_state.transactions_list = [
+        {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
+    ]
 
 # --------------------------------------------------
 # 🧭 Sidebar Menu
@@ -486,7 +484,7 @@ elif active_page == "Funds - Deposit Funds":
             
             dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
             if dep_sub:
-                new_row = pd.DataFrame([{
+                new_row = {
                     "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
                     "Date": datetime.today().strftime('%Y-%m-%d'),
                     "Type": "Deposit",
@@ -494,8 +492,8 @@ elif active_page == "Funds - Deposit Funds":
                     "Amount": f"${dep_val:,.2f}",
                     "Account": acc_target,
                     "Status": "Completed 🟢"
-                }])
-                st.session_state.transactions_df = pd.concat([new_row, st.session_state.transactions_df], ignore_index=True)
+                }
+                st.session_state.transactions_list.insert(0, new_row)
                 
                 idx = st.session_state.accounts_df.index[st.session_state.accounts_df['Account ID'] == acc_target].tolist()[0]
                 st.session_state.accounts_df.at[idx, 'Deposit'] += dep_val
@@ -538,11 +536,8 @@ elif active_page == "Funds - Withdraw Funds":
         w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
         
         if w_sub:
-            # 1. حالة بنك الاستثمار INB: الخدمة غير متوفرة
             if "Invest Bank" in w_bank or "INB" in w_bank:
                 st.warning("⚠️ **Service Temporarily Unavailable:** Automated wire routing to Invest Bank (INB) is currently undergoing scheduled network maintenance. Please select an alternative settlement bank.")
-            
-            # 2. حالة باقي البنوك: الرفض لأن الحساب معلق
             else:
                 st.error("🔴 **Withdrawal Request Declined:** Transactions are currently disabled because the selected trading account is in **SUSPENDED / INACTIVE** state. Please contact compliance to reactivate.")
 
@@ -564,17 +559,20 @@ elif active_page == "Funds - Transfer Funds":
             st.error("🔴 Transfer Error: Internal transfers are locked due to account suspension status.")
 
 # --------------------------------------------------
-# 📂 7. Funds - Transactions History
+# 📂 7. Funds - Transactions History (Fixed Real-Time Update)
 # --------------------------------------------------
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
     
     bank_options = [f"Bank Wire ({b['bank_name']})" for b in st.session_state.user_banks] + ["Bank Wire (Direct)"]
     
+    trans_df = pd.DataFrame(st.session_state.transactions_list)
+    
     edited_trans = st.data_editor(
-        st.session_state.transactions_df,
+        trans_df,
         num_rows="fixed",
         use_container_width=True,
+        key="tx_editor",
         column_config={
             "Type": st.column_config.SelectboxColumn("Type", options=["Deposit", "Withdrawal"]),
             "Status": st.column_config.SelectboxColumn("Status", options=["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"]),
@@ -585,8 +583,8 @@ elif active_page == "Funds - Transactions History":
         }
     )
 
-    if not edited_trans.equals(st.session_state.transactions_df):
-        st.session_state.transactions_df = edited_trans
+    if not edited_trans.equals(trans_df):
+        st.session_state.transactions_list = edited_trans.to_dict('records')
         st.rerun()
 
     c_space, c_add = st.columns([12, 1])
@@ -610,16 +608,19 @@ elif active_page == "Funds - Transactions History":
             
             add_t_btn = st.form_submit_button("Add Transaction", type="primary")
             if add_t_btn:
-                new_custom_entry = pd.DataFrame([{
-                    "Transaction ID": t_id,
-                    "Date": t_date,
-                    "Type": t_type,
-                    "Method": t_method,
-                    "Amount": t_amount,
-                    "Account": t_acc,
-                    "Status": t_status
-                }])
-                st.session_state.transactions_df = pd.concat([st.session_state.transactions_df, new_custom_entry], ignore_index=True)
+                # إضافة المعاملة مباشرة في قائمة الجلسة
+                st.session_state.transactions_list.insert(0, {
+                    "Transaction ID": str(t_id),
+                    "Date": str(t_date),
+                    "Type": str(t_type),
+                    "Method": str(t_method),
+                    "Amount": f"${float(t_amount.replace('$', '').replace(',', '')):,.2f}" if t_amount.replace('$', '').replace(',', '').replace('.', '').isdigit() else str(t_amount),
+                    "Account": str(t_acc),
+                    "Status": str(t_status)
+                })
+                # مسح كاش محرر الجدول لتحديثه بالقيم الجديدة فوراً
+                if "tx_editor" in st.session_state:
+                    del st.session_state["tx_editor"]
                 st.rerun()
 
 # --------------------------------------------------
