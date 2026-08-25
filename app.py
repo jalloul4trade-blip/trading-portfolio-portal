@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# 🎨 Official Client Portal Styling (Larger Sidebar Fonts)
+# 🎨 Official Client Portal Styling
 # --------------------------------------------------
 st.markdown("""
 <style>
@@ -21,13 +21,11 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     
-    /* تكبير وتنسيق القائمة الجانبية */
     section[data-testid="stSidebar"] {
         background-color: #0b0f19;
         border-right: 1px solid #1e293b;
     }
     
-    /* تكبير خطوط خيارات القائمة */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
         font-size: 16px !important;
         font-weight: 600 !important;
@@ -112,8 +110,8 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "Givtrade-Live 1", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Profit / Loss": 1370.0, "Status": "🔴 SUSPENDED"},
-        {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1370.0, "Status": "🔴 SUSPENDED"},
+        {"Account ID": "7701924", "Server": "Givtrade-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8840215", "Server": "Givtrade-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
 if 'user_banks' not in st.session_state:
@@ -143,7 +141,7 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu (Enlarged & Polished)
+# 🧭 Sidebar Menu
 # --------------------------------------------------
 with st.sidebar:
     st.markdown("<h1 style='color:#00e676; font-size:26px; margin-bottom:25px;'><span style='background:#00e676; color:#000; padding:3px 10px; border-radius:6px; font-weight:900;'>G</span> Givtrade</h1>", unsafe_allow_html=True)
@@ -189,34 +187,92 @@ st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 # --------------------------------------------------
 if menu_choice == "Accounts":
     
+    # نافذة تفاصيل الحساب المنبثقة
+    @st.dialog("Trading Account Specifications & Credentials")
+    def show_acc_details(acc_id):
+        acc = next(a for a in st.session_state.accounts_df.to_dict('records') if str(a['Account ID']) == str(acc_id))
+        st.markdown(f"""
+        <div style='background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:18px;'>
+            <table style='width:100%; border-collapse:collapse; font-size:14px;'>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Account ID / Login:</td><td><b>{acc['Account ID']}</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Trading Server:</td><td><b style='color:#00c853;'>{acc['Server']} (Real Live)</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Platform:</td><td><b>MetaTrader 5 (MT5)</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Account Leverage:</td><td><b>{acc.get('Leverage', '1:10')}</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Account Classification:</td><td><b>{acc['Account Type']}</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Account Currency:</td><td><b>USD ($)</b></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Trading Password:</td><td><span style='font-family:monospace; font-size:16px;'>••••••••••••</span></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Investor (Read-Only) Password:</td><td><span style='font-family:monospace; font-size:16px;'>••••••••••••</span></td></tr>
+                <tr style='border-bottom:1px solid #f1f5f9;'><td style='padding:10px 0; color:#64748b;'>Execution Model:</td><td><b>DMA / STP Tier-1</b></td></tr>
+                <tr><td style='padding:10px 0; color:#64748b;'>Account Health / Status:</td><td><b>{acc['Status']}</b></td></tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            st.button("🔑 Change Master Password", use_container_width=True)
+        with col_m2:
+            st.button("👁️ Change Investor Password", use_container_width=True)
+
+    # نافذة إضافة حساب جديد منبثقة ومضمونة الحفظ
+    @st.dialog("➕ Add New Trading Account")
+    def open_add_acc_dialog():
+        with st.form("add_acc_direct_form"):
+            c_a1, c_a2 = st.columns(2)
+            with c_a1:
+                n_id = st.text_input("Account ID", value=str(np.random.randint(9000000, 9999999)))
+                n_srv = st.selectbox("Server", ["Givtrade-Pro STP", "Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1"])
+                n_type = st.selectbox("Account Type", ["VIP Institutional", "Classic STP", "Swap-Free Gold"])
+            with c_a2:
+                n_dep = st.number_input("Deposit ($)", min_value=100.0, value=10000.0, step=1000.0)
+                n_bal = st.number_input("Balance ($)", min_value=0.0, value=10000.0, step=1000.0)
+                n_pl = st.number_input("Profit / Loss ($)", value=0.0, step=100.0)
+            
+            n_lev = st.selectbox("Leverage", ["1:10", "1:20", "1:50", "1:100"], index=0)
+            
+            btn_save = st.form_submit_button("Save & Add Account", type="primary", use_container_width=True)
+            if btn_save and n_id:
+                new_entry = {
+                    "Account ID": str(n_id),
+                    "Server": n_srv,
+                    "Account Type": n_type,
+                    "Deposit": float(n_dep),
+                    "Balance": float(n_bal),
+                    "Profit / Loss": float(n_pl),
+                    "Leverage": n_lev,
+                    "Status": "🔴 SUSPENDED"
+                }
+                st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, pd.DataFrame([new_entry])], ignore_index=True)
+                st.rerun()
+
+    # نافذة فتح حساب ديمو
+    @st.dialog("Open New Demo Trading Account")
+    def open_demo_dialog():
+        with st.form("create_demo_form"):
+            d_platform = st.selectbox("Trading Platform", ["MetaTrader 5 (MT5)", "MetaTrader 4 (MT4)"])
+            d_type = st.selectbox("Account Type", ["Standard STP Demo", "VIP ECN Demo", "Raw Spread Demo"])
+            d_lev = st.selectbox("Leverage", ["1:10", "1:100", "1:200", "1:500"], index=0)
+            d_bal = st.selectbox("Initial Virtual Deposit ($)", [1000.0, 5000.0, 10000.0, 50000.0, 100000.0], index=2)
+            
+            sub_demo = st.form_submit_button("Create Demo Account", type="primary", use_container_width=True)
+            if sub_demo:
+                new_acc_id = str(np.random.randint(7000000, 8999999))
+                new_row = {
+                    "Account ID": new_acc_id,
+                    "Server": "Givtrade-Demo 1",
+                    "Account Type": d_type,
+                    "Deposit": float(d_bal),
+                    "Balance": float(d_bal),
+                    "Profit / Loss": 0.0,
+                    "Leverage": d_lev,
+                    "Status": "🟢 ACTIVE DEMO"
+                }
+                st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, pd.DataFrame([new_row])], ignore_index=True)
+                st.rerun()
+
     # أزرار الإجراءات العلوية
     c_head1, c_head_btn1, c_head_btn2 = st.columns([3, 1.2, 1])
     with c_head_btn1:
-        # Dialog لفتح حساب ديمو
-        @st.dialog("Open New Demo Trading Account")
-        def open_demo_dialog():
-            with st.form("create_demo_form"):
-                d_platform = st.selectbox("Trading Platform", ["MetaTrader 5 (MT5)", "MetaTrader 4 (MT4)"])
-                d_type = st.selectbox("Account Type", ["Standard STP Demo", "VIP ECN Demo", "Raw Spread Demo"])
-                d_lev = st.selectbox("Leverage", ["1:100", "1:200", "1:500", "1:1000"], index=2)
-                d_bal = st.selectbox("Initial Virtual Deposit ($)", [1000.0, 5000.0, 10000.0, 50000.0, 100000.0], index=2)
-                
-                sub_demo = st.form_submit_button("Create Demo Account", type="primary", use_container_width=True)
-                if sub_demo:
-                    new_acc_id = str(np.random.randint(7000000, 8999999))
-                    new_row = pd.DataFrame([{
-                        "Account ID": new_acc_id,
-                        "Server": "Givtrade-Demo 1",
-                        "Account Type": d_type,
-                        "Deposit": float(d_bal),
-                        "Balance": float(d_bal),
-                        "Profit / Loss": 0.0,
-                        "Status": "🟢 ACTIVE DEMO"
-                    }])
-                    st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_row], ignore_index=True)
-                    st.success(f"Demo Account #{new_acc_id} created successfully!")
-                    st.rerun()
-
         if st.button("➕ Open Demo Account", use_container_width=True):
             open_demo_dialog()
 
@@ -247,7 +303,14 @@ if menu_choice == "Accounts":
     m4.metric("Total Cumulative Net P/L", f"${tot_net_growth:+,.2f}", f"{(tot_net_growth/tot_deposit)*100:+.2f}%" if tot_deposit > 0 else "0.00%")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Trading Accounts Matrix")
+    
+    col_mat_t, col_mat_sel = st.columns([2.5, 1.2])
+    with col_mat_t:
+        st.subheader("Trading Accounts Matrix")
+    with col_mat_sel:
+        acc_choice = st.selectbox("View Account Credentials / Details", ["Select Account..."] + df['Account ID'].tolist())
+        if acc_choice != "Select Account...":
+            show_acc_details(acc_choice)
 
     edited_df = st.data_editor(
         st.session_state.accounts_df,
@@ -258,7 +321,8 @@ if menu_choice == "Accounts":
             "Balance": st.column_config.NumberColumn("Balance ($)", format="$%.2f"),
             "Profit / Loss": st.column_config.NumberColumn("Profit / Loss ($)", format="$%.2f"),
             "Status": st.column_config.SelectboxColumn("Status", options=["🔴 SUSPENDED", "🟢 ACTIVE", "🟢 ACTIVE DEMO", "🟡 PENDING"]),
-            "Server": st.column_config.SelectboxColumn("Server", options=["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1", "Givtrade-Pro STP"]),
+            "Server": st.column_config.SelectboxColumn("Server", options=["Givtrade-Pro STP", "Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1"]),
+            "Leverage": st.column_config.SelectboxColumn("Leverage", options=["1:10", "1:20", "1:50", "1:100"]),
             "Account Type": st.column_config.SelectboxColumn("Account Type", options=["VIP Institutional", "Classic STP", "Swap-Free Gold", "Standard STP Demo", "VIP ECN Demo"])
         }
     )
@@ -269,35 +333,15 @@ if menu_choice == "Accounts":
 
     c_sp, c_btn = st.columns([12, 1])
     with c_btn:
-        show_add_acc = st.button("➕", key="btn_add_acc_pop")
-
-    if show_add_acc:
-        with st.form("add_acc_clean_form"):
-            c_a1, c_a2, c_a3 = st.columns(3)
-            with c_a1:
-                n_id = st.text_input("Account ID", value="9920145")
-                n_srv = st.selectbox("Server", ["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1", "Givtrade-Pro STP"])
-            with c_a2:
-                n_type = st.selectbox("Type", ["VIP Institutional", "Classic STP", "Swap-Free Gold"])
-                n_dep = st.number_input("Deposit ($)", min_value=100.0, value=10000.0, step=1000.0)
-            with c_a3:
-                n_bal = st.number_input("Balance ($)", min_value=0.0, value=10000.0, step=1000.0)
-                n_pl = st.number_input("Profit / Loss ($)", value=0.0, step=100.0)
-            
-            btn_add_acc = st.form_submit_button("Save Account", type="primary")
-            if btn_add_acc and n_id:
-                new_acc_row = pd.DataFrame([{
-                    "Account ID": n_id, "Server": n_srv, "Account Type": n_type,
-                    "Deposit": n_dep, "Balance": n_bal, "Profit / Loss": n_pl, "Status": "🔴 SUSPENDED"
-                }])
-                st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_acc_row], ignore_index=True)
-                st.rerun()
+        if st.button("➕", key="btn_add_acc_pop"):
+            open_add_acc_dialog()
 
     st.markdown("---")
     st.subheader("Calculated Equity & Risk Summary")
     summary_view = pd.DataFrame({
         "Account ID": df['Account ID'],
         "Server": df['Server'],
+        "Leverage": df.get('Leverage', '1:10'),
         "Calculated Equity": df['Calculated Equity'].map('${:,.2f}'.format),
         "Profit / Loss": df['Profit / Loss'].map('{:+,.2f}$'.format),
         "Total Profit / Loss": df['Total Net P/L'].map('{:+,.2f}$'.format),
