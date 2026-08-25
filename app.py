@@ -175,7 +175,7 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu (With Exact Funds Dropdown Options)
+# 🧭 Sidebar Menu (Includes GT Platform Option)
 # --------------------------------------------------
 with st.sidebar:
     st.markdown("""
@@ -189,7 +189,7 @@ with st.sidebar:
     
     main_nav = st.radio(
         label="Main Section",
-        options=["Accounts", "Funds", "My Profile", "Downloads", "Economic Calendar"],
+        options=["Accounts", "Funds", "GT Platform", "My Profile", "Downloads", "Economic Calendar"],
         index=0,
         label_visibility="collapsed"
     )
@@ -208,7 +208,6 @@ with st.sidebar:
     st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:8px;'>IB MENU</p>", unsafe_allow_html=True)
     ib_choice = st.checkbox("💼 Request IB")
 
-# تحديد الصفحة الحالية
 if ib_choice:
     active_page = "Request IB"
 elif main_nav == "Funds":
@@ -228,7 +227,7 @@ with col_top_l:
 with col_top_r:
     st.markdown(f"""
     <div style='text-align:right; font-size:14px; display:flex; align-items:center; justify-content:flex-end; gap:18px;'>
-        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
+        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00c853; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
         <span>🇬🇧</span>
         <span>✉️ Messages</span>
         <span>🎧 Help Desk</span>
@@ -403,18 +402,64 @@ if active_page == "Accounts":
     st.dataframe(summary_view, use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 2. Funds - Wallet Accounts (Exact Match to Screenshot)
+# 📂 2. GT Platform (TradingView Gateway with Modal)
+# --------------------------------------------------
+elif active_page == "GT Platform":
+    st.subheader("GT Institutional Trading Terminal")
+    
+    st.markdown("""
+    <div class="portal-card" style="text-align: center; padding: 40px 20px;">
+        <h2 style="color: #0f172a; margin-bottom: 10px;">Direct Market Execution & Advanced Charting</h2>
+        <p style="color: #64748b; font-size: 15px; max-width: 600px; margin: 0 auto 25px;">
+            Access real-time institutional price action, multi-timeframe analytics, and market liquidity depth powered by TradingView.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    @st.dialog("External Platform Navigation")
+    def confirm_navigation():
+        st.markdown("""
+        <div style='text-align: center; padding: 10px 0;'>
+            <h3 style='color: #0f172a; margin-bottom: 12px;'>Leaving GT Client Portal</h3>
+            <p style='color: #64748b; font-size: 14px; line-height: 1.6;'>
+                You are about to launch the <b>GT Institutional Charting Engine</b> in a new secure browser tab powered by <b>TradingView</b>.
+            </p>
+            <p style='color: #00c853; font-size: 13px; font-weight: 700;'>
+                Do you wish to proceed?
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            st.markdown("""
+            <a href="https://www.tradingview.com/chart/" target="_blank" style="text-decoration: none;">
+                <div style="background-color: #00c853; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 14px;">
+                    Yes, Proceed to Platform
+                </div>
+            </a>
+            """, unsafe_allow_html=True)
+        with col_no:
+            if st.button("Cancel & Return", use_container_width=True):
+                st.rerun()
+
+    col_btn_center1, col_btn_center2, col_btn_center3 = st.columns([1, 1.2, 1])
+    with col_btn_center2:
+        if st.button("🚀 Launch GT Platform Terminal", type="primary", use_container_width=True):
+            confirm_navigation()
+
+# --------------------------------------------------
+# 📂 3. Funds - Wallet Accounts
 # --------------------------------------------------
 elif active_page == "Funds - Wallet Accounts":
     st.subheader("Wallet Accounts")
-    
     wallet_df = pd.DataFrame([
         {"Account Type": "Wallet", "Wallet Number": "10208", "Currency": "USD", "Balance": "$0.00", "Action": "🗂️ History"}
     ])
     st.dataframe(wallet_df, use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 3. Funds - Deposit Funds
+# 📂 4. Funds - Deposit Funds
 # --------------------------------------------------
 elif active_page == "Funds - Deposit Funds":
     st.subheader("Deposit Capital via Direct Bank Wire")
@@ -465,7 +510,7 @@ elif active_page == "Funds - Deposit Funds":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 4. Funds - Withdraw Funds
+# 📂 5. Funds - Withdraw Funds
 # --------------------------------------------------
 elif active_page == "Funds - Withdraw Funds":
     st.subheader("Request Capital Withdrawal to Bank Account")
@@ -494,7 +539,7 @@ elif active_page == "Funds - Withdraw Funds":
             st.rerun()
 
 # --------------------------------------------------
-# 📂 5. Funds - Transfer Funds
+# 📂 6. Funds - Transfer Funds
 # --------------------------------------------------
 elif active_page == "Funds - Transfer Funds":
     st.subheader("Internal Capital Transfer")
@@ -511,7 +556,7 @@ elif active_page == "Funds - Transfer Funds":
             st.success(f"Successfully transferred ${tr_amt:,.2f} from {tr_from} to {tr_to} instantly.")
 
 # --------------------------------------------------
-# 📂 6. Funds - Transactions History
+# 📂 7. Funds - Transactions History
 # --------------------------------------------------
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
@@ -570,7 +615,7 @@ elif active_page == "Funds - Transactions History":
                 st.rerun()
 
 # --------------------------------------------------
-# 📂 7. Funds - Payment Details
+# 📂 8. Funds - Payment Details
 # --------------------------------------------------
 elif active_page == "Funds - Payment Details":
     st.subheader("Registered Settlement Bank Accounts")
@@ -602,7 +647,7 @@ elif active_page == "Funds - Payment Details":
                 st.rerun()
 
 # --------------------------------------------------
-# 📂 8. Downloads Screen
+# 📂 9. Downloads Screen
 # --------------------------------------------------
 elif active_page == "Downloads":
     col_dl1, col_dl2 = st.columns(2)
@@ -656,7 +701,7 @@ elif active_page == "Downloads":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 9. My Profile Screen
+# 📂 10. My Profile Screen
 # --------------------------------------------------
 elif active_page == "My Profile":
     col_prof_l, col_prof_r = st.columns([1.3, 1], gap="large")
@@ -711,7 +756,7 @@ elif active_page == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 10. Economic Calendar Screen
+# 📂 11. Economic Calendar Screen
 # --------------------------------------------------
 elif active_page == "Economic Calendar":
     st.subheader("High-Impact Market Calendar (GMT+4)")
@@ -724,7 +769,7 @@ elif active_page == "Economic Calendar":
     st.dataframe(pd.DataFrame(calendar_events), use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 11. Request IB Screen
+# 📂 12. Request IB Screen
 # --------------------------------------------------
 elif active_page == "Request IB":
     st.subheader("Introducing Broker (IB) & Partner Portal")
