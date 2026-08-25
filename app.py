@@ -148,7 +148,7 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
-# البنوك المعتمدة المحدثة
+# البنوك المعتمدة
 st.session_state.user_banks = [
     {
         "bank_name": "Invest Bank (INB)",
@@ -176,9 +176,10 @@ st.session_state.user_banks = [
     }
 ]
 
-# سجل المعاملات الدائم
+# سجل المعاملات الأساسي
 if 'transactions_permanent' not in st.session_state:
     st.session_state.transactions_permanent = [
+        {"Transaction ID": "TXN-714007", "Date": "2026-08-25", "Type": "Deposit", "Method": "Bank Wire (Invest Bank (INB))", "Amount": "$3,998.00", "Account": "8901924", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (First Abu Dhabi Bank (FAB))", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
         {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic Bank (EIB))", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
     ]
@@ -558,42 +559,31 @@ elif active_page == "Funds - Transfer Funds":
             st.error("🔴 Transfer Error: Internal transfers are locked due to account suspension status.")
 
 # --------------------------------------------------
-# 📂 7. Funds - Transactions History (Guaranteed Addition)
+# 📂 7. Funds - Transactions History (Editable + Delete on '0')
 # --------------------------------------------------
 elif active_page == "Funds - Transactions History":
     st.subheader("Bank Wire Transactions Log")
     
     bank_options = [f"Bank Wire ({b['bank_name']})" for b in st.session_state.user_banks] + ["Bank Wire (Direct)"]
     
-    # عرض الجدول بشكل كامل ومباشر
-    st.dataframe(
-        pd.DataFrame(st.session_state.transactions_permanent),
-        use_container_width=True,
-        hide_index=True
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # نموذج إضافة معاملة جديدة
-    with st.container():
-        st.markdown("#### ➕ Add New Bank Transaction Record")
-        with st.form("direct_add_tx_form", clear_on_submit=True):
-            col_tr1, col_tr2, col_tr3 = st.columns(3)
-            with col_tr1:
+    # نافذة إضافة معاملة منبثقة ومخفية
+    @st.dialog("➕ Add New Bank Transaction Record")
+    def open_add_tx_dialog():
+        with st.form("modal_add_tx_form"):
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
                 t_id = st.text_input("Transaction ID", value=f"TXN-{np.random.randint(100000, 999999)}")
                 t_date = st.text_input("Date (YYYY-MM-DD)", value=datetime.today().strftime('%Y-%m-%d'))
-            with col_tr2:
                 t_type = st.selectbox("Type", ["Deposit", "Withdrawal"])
-                t_method = st.selectbox("Method", bank_options)
-            with col_tr3:
+            with col_t2:
                 t_amount = st.text_input("Amount (e.g. $3,998.00)", value="$3,998.00")
+                t_method = st.selectbox("Method", bank_options)
                 t_acc = st.selectbox("Target Account", st.session_state.accounts_df['Account ID'].tolist())
             
             t_status = st.selectbox("Status", ["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
             
-            add_t_btn = st.form_submit_button("Add Transaction to Log", type="primary")
-            if add_t_btn:
-                # معالجة وتنسيق الرقم
+            sub_tx = st.form_submit_button("Save Transaction to Log", type="primary", use_container_width=True)
+            if sub_tx:
                 raw_amt = t_amount.replace('$', '').replace(',', '').strip()
                 formatted_amt = f"${float(raw_amt):,.2f}" if raw_amt.replace('.', '', 1).isdigit() else t_amount
                 
@@ -606,11 +596,39 @@ elif active_page == "Funds - Transactions History":
                     "Account": str(t_acc),
                     "Status": str(t_status)
                 }
-                
-                # إضافة المعاملة في أول القائمة
                 st.session_state.transactions_permanent.insert(0, new_entry)
-                st.success(f"Transaction {t_id} added successfully to the log!")
                 st.rerun()
+
+    current_df = pd.DataFrame(st.session_state.transactions_permanent)
+
+    # جدول تفاعلي بالكامل: عند تغيير Transaction ID إلى 0 يُحذف الصف فوراً
+    edited_tx_df = st.data_editor(
+        current_df,
+        num_rows="fixed",
+        use_container_width=True,
+        column_config={
+            "Transaction ID": st.column_config.TextColumn("Transaction ID (Set '0' to delete)"),
+            "Date": st.column_config.TextColumn("Date"),
+            "Type": st.column_config.SelectboxColumn("Type", options=["Deposit", "Withdrawal"]),
+            "Method": st.column_config.SelectboxColumn("Method", options=bank_options),
+            "Amount": st.column_config.TextColumn("Amount"),
+            "Account": st.column_config.TextColumn("Account"),
+            "Status": st.column_config.SelectboxColumn("Status", options=["Completed 🟢", "Processing 🟡", "Pending ⚪", "Rejected 🔴"])
+        }
+    )
+
+    # فحص إذا تم كتابة 0 لحذف أي معاملة أو تعديل أي قيمة
+    if not edited_tx_df.equals(current_df):
+        # تصفية وحذف أي صف يحتوي على 0 أو فارغ في خانة Transaction ID
+        filtered_df = edited_tx_df[~edited_tx_df['Transaction ID'].astype(str).str.strip().isin(['0', '0.0', ''])]
+        st.session_state.transactions_permanent = filtered_df.to_dict('records')
+        st.rerun()
+
+    # زر + صغير ومنزوي جداً في أسفل يمين الجدول
+    col_empty_space, col_tiny_btn = st.columns([15, 1])
+    with col_tiny_btn:
+        if st.button("➕", key="tiny_add_tx_btn", help="Add Transaction"):
+            open_add_tx_dialog()
 
 # --------------------------------------------------
 # 📂 8. Funds - Payment Details
