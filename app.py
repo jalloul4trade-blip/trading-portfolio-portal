@@ -3,15 +3,21 @@ import pandas as pd
 from datetime import datetime
 import numpy as np
 
+# أيقونة التبويب المخصصة بحرفي GT
+GT_FAVICON_SVG = """data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+<rect width='64' height='64' rx='14' fill='%23061a10'/>
+<text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black, sans-serif' font-weight='900' font-size='32' fill='%2300c853'>GT</text>
+</svg>"""
+
 st.set_page_config(
-    page_title="Givtrade - Client Portal",
-    page_icon="🟢",
+    page_title="GT Portal - Client Terminal",
+    page_icon=GT_FAVICON_SVG,
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # --------------------------------------------------
-# 🎨 Official Client Portal Styling
+# 🎨 Official Client Portal Styling & GT Branding
 # --------------------------------------------------
 st.markdown("""
 <style>
@@ -26,6 +32,36 @@ st.markdown("""
         border-right: 1px solid #1e293b;
     }
     
+    /* تنسيق شعار GT في القائمة الجانبية */
+    .gt-logo-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+    .gt-badge {
+        background: linear-gradient(135deg, #022b16 0%, #000000 100%);
+        border: 2px solid #00c853;
+        color: #00c853;
+        font-family: 'Arial Black', sans-serif;
+        font-size: 24px;
+        font-weight: 900;
+        padding: 4px 14px;
+        border-radius: 10px;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 12px rgba(0, 200, 83, 0.2);
+    }
+    .gt-title {
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    .gt-title span {
+        color: #00c853;
+    }
+
+    /* تكبير خطوط خيارات القائمة */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
         font-size: 16px !important;
         font-weight: 600 !important;
@@ -35,7 +71,7 @@ st.markdown("""
         transition: all 0.2s;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
-        color: #00e676 !important;
+        color: #00c853 !important;
         background: rgba(255, 255, 255, 0.05);
     }
     
@@ -110,8 +146,8 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "Givtrade-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
-        {"Account ID": "8840215", "Server": "Givtrade-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "7701924", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Profit / Loss": 1374.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8840215", "Server": "GT-Pro STP", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1376.0, "Leverage": "1:10", "Status": "🔴 SUSPENDED"},
     ])
 
 if 'user_banks' not in st.session_state:
@@ -141,10 +177,15 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu
+# 🧭 Sidebar Menu (GT Branded)
 # --------------------------------------------------
 with st.sidebar:
-    st.markdown("<h1 style='color:#00e676; font-size:26px; margin-bottom:25px;'><span style='background:#00e676; color:#000; padding:3px 10px; border-radius:6px; font-weight:900;'>G</span> Givtrade</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="gt-logo-box">
+        <span class="gt-badge">GT</span>
+        <div class="gt-title">PORTAL<span>.</span></div>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:10px;'>TRADER'S MENU</p>", unsafe_allow_html=True)
     menu_choice = st.radio(
@@ -172,7 +213,7 @@ with col_top_l:
 with col_top_r:
     st.markdown(f"""
     <div style='text-align:right; font-size:14px; display:flex; align-items:center; justify-content:flex-end; gap:18px;'>
-        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
+        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00c853; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
         <span>🇬🇧</span>
         <span>✉️ Messages</span>
         <span>🎧 Help Desk</span>
@@ -187,7 +228,6 @@ st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 # --------------------------------------------------
 if menu_choice == "Accounts":
     
-    # نافذة تفاصيل الحساب المنبثقة
     @st.dialog("Trading Account Specifications & Credentials")
     def show_acc_details(acc_id):
         acc = next(a for a in st.session_state.accounts_df.to_dict('records') if str(a['Account ID']) == str(acc_id))
@@ -214,14 +254,13 @@ if menu_choice == "Accounts":
         with col_m2:
             st.button("👁️ Change Investor Password", use_container_width=True)
 
-    # نافذة إضافة حساب جديد منبثقة ومضمونة الحفظ
     @st.dialog("➕ Add New Trading Account")
     def open_add_acc_dialog():
         with st.form("add_acc_direct_form"):
             c_a1, c_a2 = st.columns(2)
             with c_a1:
                 n_id = st.text_input("Account ID", value=str(np.random.randint(9000000, 9999999)))
-                n_srv = st.selectbox("Server", ["Givtrade-Pro STP", "Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1"])
+                n_srv = st.selectbox("Server", ["GT-Pro STP", "GT-Live 1", "GT-Live 2", "GT-Demo 1"])
                 n_type = st.selectbox("Account Type", ["VIP Institutional", "Classic STP", "Swap-Free Gold"])
             with c_a2:
                 n_dep = st.number_input("Deposit ($)", min_value=100.0, value=10000.0, step=1000.0)
@@ -245,7 +284,6 @@ if menu_choice == "Accounts":
                 st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, pd.DataFrame([new_entry])], ignore_index=True)
                 st.rerun()
 
-    # نافذة فتح حساب ديمو
     @st.dialog("Open New Demo Trading Account")
     def open_demo_dialog():
         with st.form("create_demo_form"):
@@ -259,7 +297,7 @@ if menu_choice == "Accounts":
                 new_acc_id = str(np.random.randint(7000000, 8999999))
                 new_row = {
                     "Account ID": new_acc_id,
-                    "Server": "Givtrade-Demo 1",
+                    "Server": "GT-Demo 1",
                     "Account Type": d_type,
                     "Deposit": float(d_bal),
                     "Balance": float(d_bal),
@@ -270,7 +308,6 @@ if menu_choice == "Accounts":
                 st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, pd.DataFrame([new_row])], ignore_index=True)
                 st.rerun()
 
-    # أزرار الإجراءات العلوية
     c_head1, c_head_btn1, c_head_btn2 = st.columns([3, 1.2, 1])
     with c_head_btn1:
         if st.button("➕ Open Demo Account", use_container_width=True):
@@ -321,7 +358,7 @@ if menu_choice == "Accounts":
             "Balance": st.column_config.NumberColumn("Balance ($)", format="$%.2f"),
             "Profit / Loss": st.column_config.NumberColumn("Profit / Loss ($)", format="$%.2f"),
             "Status": st.column_config.SelectboxColumn("Status", options=["🔴 SUSPENDED", "🟢 ACTIVE", "🟢 ACTIVE DEMO", "🟡 PENDING"]),
-            "Server": st.column_config.SelectboxColumn("Server", options=["Givtrade-Pro STP", "Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1"]),
+            "Server": st.column_config.SelectboxColumn("Server", options=["GT-Pro STP", "GT-Live 1", "GT-Live 2", "GT-Demo 1"]),
             "Leverage": st.column_config.SelectboxColumn("Leverage", options=["1:10", "1:20", "1:50", "1:100"]),
             "Account Type": st.column_config.SelectboxColumn("Account Type", options=["VIP Institutional", "Classic STP", "Swap-Free Gold", "Standard STP Demo", "VIP ECN Demo"])
         }
@@ -478,7 +515,7 @@ elif menu_choice == "Funds":
                 acc_target = st.selectbox("Select Target Account", st.session_state.accounts_df['Account ID'].tolist())
                 selected_bank_name = st.selectbox("Select Sending / Receiving Bank", bank_names)
                 dep_val = st.number_input("Deposit Amount ($)", min_value=100.0, value=10000.0, step=1000.0)
-                dep_ref = st.text_input("Bank Transfer Reference / Note", value=f"GIV-{prof['client_id']}")
+                dep_ref = st.text_input("Bank Transfer Reference / Note", value=f"GT-{prof['client_id']}")
                 
                 dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
                 if dep_sub:
@@ -652,6 +689,6 @@ elif menu_choice == "Request IB":
     <div class="portal-card">
         <h4>Your Institutional Partner Link</h4>
         <p style="color:#64748b; font-size:13px;">Share your direct partner routing link to onboard sub-accounts automatically:</p>
-        <code style="background:#f1f5f9; padding:8px 12px; border-radius:6px; font-size:14px; color:#0f172a;">https://givtrade.com/partner/ref/22752</code>
+        <code style="background:#f1f5f9; padding:8px 12px; border-radius:6px; font-size:14px; color:#0f172a;">https://gtportal.com/partner/ref/22752</code>
     </div>
     """, unsafe_allow_html=True)
