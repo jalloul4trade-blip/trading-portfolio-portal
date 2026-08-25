@@ -53,6 +53,34 @@ st.markdown("""
         font-size: 12px;
         font-weight: 700;
     }
+    .download-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-download {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 25px;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 15px;
+        display: inline-block;
+        text-decoration: none;
+    }
+    .btn-download:hover {
+        background: #f1f5f9;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -73,7 +101,7 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "Givtrade-Live 1", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
+        {"Account ID": "7701924", "Server": "Givtrade-Live 1", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
         {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
     ])
 
@@ -103,11 +131,6 @@ if 'transactions_df' not in st.session_state:
         {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic)", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
     ])
 
-if 'tickets_db' not in st.session_state:
-    st.session_state.tickets_db = [
-        {"Ticket ID": "#T-8801", "Date": "2026-08-22", "Subject": "Bank Settlement Clearance", "Department": "Finance & Settlements", "Status": "Resolved 🟢"},
-    ]
-
 # --------------------------------------------------
 # 🧭 Sidebar Menu
 # --------------------------------------------------
@@ -117,27 +140,48 @@ with st.sidebar:
     st.caption("TRADER'S MENU")
     menu_choice = st.radio(
         label="Trader Menu Options",
-        options=["Accounts", "My Profile", "Funds", "Upload Documents", "Messages", "Help Desk", "Economic Calendar", "Request IB"],
+        options=["Accounts", "Funds", "My Profile", "Downloads", "Economic Calendar"],
         index=0,
         label_visibility="collapsed"
     )
+    
+    st.markdown("---")
+    st.caption("IB MENU")
+    ib_choice = st.checkbox("💼 Request IB")
+    if ib_choice:
+        menu_choice = "Request IB"
 
 # --------------------------------------------------
-# 🔝 Top Navigation Bar
+# 🔝 Top Navigation Bar & Action Buttons
 # --------------------------------------------------
 prof = st.session_state.profile_data
-col_h1, col_h2, col_h3 = st.columns([2, 1, 1.3])
-with col_h1:
-    st.markdown(f"**Home** / Trader's Menu / **{menu_choice}**")
-with col_h3:
+
+col_top_l, col_top_r = st.columns([1.5, 1.5])
+with col_top_l:
+    st.markdown(f"<div style='padding-top:8px; font-size:14px;'>☰ &nbsp;&nbsp; <b>Home</b> / Trader's Menu / <b>{menu_choice}</b></div>", unsafe_allow_html=True)
+
+with col_top_r:
     st.markdown(f"""
-    <div style='text-align:right; font-size:13px;'>
-        <b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:1px 6px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span>
-        &nbsp;|&nbsp; 🇬🇧 &nbsp;|&nbsp; 🚪 <a href='#' style='color:#64748b; text-decoration:none;'>Log out</a>
+    <div style='text-align:right; font-size:13px; display:flex; align-items:center; justify-content:flex-end; gap:15px;'>
+        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 6px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
+        <span>🇬🇧</span>
+        <span>✉️ Messages</span>
+        <span>🎧 Help Desk</span>
+        <span>🚪 <a href='#' style='color:#64748b; text-decoration:none;'>Log out</a></span>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<hr style='margin:10px 0 25px 0; border:none; border-bottom:1px solid #e2e8f0;'>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+
+# أزرار الإجراءات السريعة العلوية
+col_btn1, col_btn2 = st.columns([4, 1.2])
+with col_btn2:
+    st.markdown("""
+    <div style='display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;'>
+        <span style='background:#0f172a; color:white; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;'>+ Open Demo Account</span>
+        <span style='background:#00c853; color:white; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;'>💳 Deposit Funds</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --------------------------------------------------
 # 📂 1. Accounts Screen
@@ -184,7 +228,6 @@ if menu_choice == "Accounts":
         st.session_state.accounts_df = edited_df
         st.rerun()
 
-    # زر + منزوي وصغير فقط
     c_sp, c_btn = st.columns([12, 1])
     with c_btn:
         show_add_acc = st.button("➕", key="btn_add_acc_pop")
@@ -224,7 +267,61 @@ if menu_choice == "Accounts":
     st.dataframe(summary_view, use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 2. My Profile Screen
+# 📂 2. Downloads Screen
+# --------------------------------------------------
+elif menu_choice == "Downloads":
+    col_dl1, col_dl2 = st.columns(2)
+    
+    with col_dl1:
+        st.markdown("""
+        <div class="download-card">
+            <h3 style="margin-top:0; font-size:18px; margin-bottom:20px;">MT5 Windows</h3>
+            <svg width="140" height="90" viewBox="0 0 140 90" fill="none">
+                <rect x="10" y="5" width="120" height="70" rx="4" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+                <rect x="15" y="10" width="110" height="60" fill="#1e293b"/>
+                <path d="M25 45 L45 25 L65 50 L85 30 L105 40" stroke="#00c853" stroke-width="2"/>
+                <rect x="55" y="77" width="30" height="8" fill="#94a3b8"/>
+                <rect x="45" y="85" width="50" height="3" fill="#64748b"/>
+            </svg>
+            <br>
+            <a href="#" class="btn-download">📥 Download</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_dl2:
+        st.markdown("""
+        <div class="download-card">
+            <h3 style="margin-top:0; font-size:18px; margin-bottom:20px;">Mobile IOS</h3>
+            <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
+                <rect x="35" y="5" width="50" height="80" rx="8" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+                <rect x="40" y="12" width="40" height="66" rx="4" fill="#1e293b"/>
+                <path d="M45 50 L55 35 L65 55 L75 40" stroke="#00c853" stroke-width="2"/>
+                <circle cx="60" cy="81" r="2" fill="#cbd5e1"/>
+            </svg>
+            <br>
+            <a href="#" class="btn-download">📥 Download</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col_dl3, col_dl_empty = st.columns([1, 1])
+    with col_dl3:
+        st.markdown("""
+        <div class="download-card">
+            <h3 style="margin-top:0; font-size:18px; margin-bottom:20px;">Mobile Android</h3>
+            <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
+                <rect x="35" y="5" width="50" height="80" rx="6" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+                <rect x="40" y="10" width="40" height="70" rx="3" fill="#1e293b"/>
+                <path d="M45 50 L55 35 L65 55 L75 40" stroke="#00c853" stroke-width="2"/>
+            </svg>
+            <br>
+            <a href="#" class="btn-download">📥 Download</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --------------------------------------------------
+# 📂 3. My Profile Screen
 # --------------------------------------------------
 elif menu_choice == "My Profile":
     col_prof_l, col_prof_r = st.columns([1.3, 1], gap="large")
@@ -279,7 +376,7 @@ elif menu_choice == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 3. Funds Screen (Clean Log + Bottom Single '+' Button)
+# 📂 4. Funds Screen
 # --------------------------------------------------
 elif menu_choice == "Funds":
     tab_dep, tab_with, tab_banks, tab_hist = st.tabs([
@@ -288,7 +385,6 @@ elif menu_choice == "Funds":
     
     bank_names = [b['bank_name'] for b in st.session_state.user_banks]
 
-    # 1. إيداع بنكي
     with tab_dep:
         st.subheader("Deposit Capital via Direct Bank Wire")
         col_d1, col_d2 = st.columns([1.2, 1])
@@ -336,7 +432,6 @@ elif menu_choice == "Funds":
             </div>
             """, unsafe_allow_html=True)
 
-    # 2. سحب بنكي
     with tab_with:
         st.subheader("Request Capital Withdrawal to Bank Account")
         with st.form("with_bank_form"):
@@ -362,7 +457,6 @@ elif menu_choice == "Funds":
                 st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
                 st.rerun()
 
-    # 3. إدارة البنوك
     with tab_banks:
         st.subheader("Registered Bank Accounts")
         st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
@@ -392,7 +486,6 @@ elif menu_choice == "Funds":
                     })
                     st.rerun()
 
-    # 4. سجل المعاملات مع زر '+' المنزوي
     with tab_hist:
         st.subheader("Bank Wire Transactions Log")
         
@@ -414,12 +507,10 @@ elif menu_choice == "Funds":
             st.session_state.transactions_df = edited_trans
             st.rerun()
 
-        # زر + في الزاوية السفلية اليمينية فقط
         c_space, c_add = st.columns([12, 1])
         with c_add:
             show_add_form = st.button("➕", key="btn_add_trans_pop")
 
-        # يفتح النموذج فقط عند الضغط على الزر الصغير +
         if show_add_form:
             with st.form("add_custom_trans_form"):
                 col_tr1, col_tr2, col_tr3 = st.columns(3)
@@ -450,81 +541,7 @@ elif menu_choice == "Funds":
                     st.rerun()
 
 # --------------------------------------------------
-# 📂 4. Upload Documents Screen
-# --------------------------------------------------
-elif menu_choice == "Upload Documents":
-    st.subheader("Identity & Compliance Documentation")
-    col_u1, col_u2 = st.columns(2)
-    
-    with col_u1:
-        st.markdown("""
-        <div class="portal-card">
-            <h4>Primary Identity (Passport / ID)</h4>
-            <p style="color:#64748b; font-size:13px;">Document Number: <b>P-7749102-AE</b></p>
-            <span class="badge-approved">Approved & Verified 🟢</span>
-            <hr style="margin:15px 0; border:none; border-bottom:1px solid #f1f5f9;">
-            <p style="font-size:12px; color:#64748b;">Uploaded: 2026-01-14 | Expiry: 2031-01-14</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_u2:
-        st.markdown("""
-        <div class="portal-card">
-            <h4>Proof of Address (Utility Bill / Bank Statement)</h4>
-            <p style="color:#64748b; font-size:13px;">Address: <b>Dubai, United Arab Emirates</b></p>
-            <span class="badge-approved">Approved & Verified 🟢</span>
-            <hr style="margin:15px 0; border:none; border-bottom:1px solid #f1f5f9;">
-            <p style="font-size:12px; color:#64748b;">Uploaded: 2026-01-14 | Verified by Compliance</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("#### Upload Additional Documentation")
-    st.file_uploader("Select PDF or Image file", type=["pdf", "png", "jpg"])
-
-# --------------------------------------------------
-# 📂 5. Messages & Notifications Screen
-# --------------------------------------------------
-elif menu_choice == "Messages":
-    st.subheader("Secure Client Inbox & System Alerts")
-    
-    messages = [
-        {"Sender": "Dealing Desk", "Subject": "Weekly Account Performance Statement", "Date": "2026-08-24 09:00", "Priority": "Normal 🟢"},
-        {"Sender": "Risk Management", "Subject": "Margin Level Health Confirmation (93%)", "Date": "2026-08-22 14:30", "Priority": "Important 🔵"},
-        {"Sender": "Givtrade System", "Subject": "MT5 Server Bridge Routine Maintenance Completed", "Date": "2026-08-18 22:00", "Priority": "System ⚪"}
-    ]
-    st.dataframe(pd.DataFrame(messages), use_container_width=True, hide_index=True)
-
-# --------------------------------------------------
-# 📂 6. Help Desk Screen
-# --------------------------------------------------
-elif menu_choice == "Help Desk":
-    st.subheader("Institutional Support Desk")
-    col_t1, col_t2 = st.columns([1.2, 1])
-    
-    with col_t1:
-        st.markdown("#### Active Support Tickets")
-        st.dataframe(pd.DataFrame(st.session_state.tickets_db), use_container_width=True, hide_index=True)
-    
-    with col_t2:
-        st.markdown("#### Open New Support Request")
-        with st.form("ticket_form"):
-            t_sub = st.text_input("Ticket Subject")
-            t_dept = st.selectbox("Department", ["Dealing Desk & Execution", "Technical Support & VPS", "Finance & Settlements", "Compliance"])
-            t_msg = st.text_area("Message Details")
-            t_btn = st.form_submit_button("Submit Ticket", type="primary")
-            if t_btn and t_sub:
-                st.session_state.tickets_db.insert(0, {
-                    "Ticket ID": f"#T-{np.random.randint(1000, 9999)}",
-                    "Date": datetime.today().strftime('%Y-%m-%d'),
-                    "Subject": t_sub,
-                    "Department": t_dept,
-                    "Status": "Open 🟢"
-                })
-                st.success("Support ticket created successfully!")
-                st.rerun()
-
-# --------------------------------------------------
-# 📂 7. Economic Calendar Screen
+# 📂 5. Economic Calendar Screen
 # --------------------------------------------------
 elif menu_choice == "Economic Calendar":
     st.subheader("High-Impact Market Calendar (GMT+4)")
@@ -537,7 +554,7 @@ elif menu_choice == "Economic Calendar":
     st.dataframe(pd.DataFrame(calendar_events), use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
-# 📂 8. Request IB Screen (Introducing Broker Portal)
+# 📂 6. Request IB Screen
 # --------------------------------------------------
 elif menu_choice == "Request IB":
     st.subheader("Introducing Broker (IB) & Partner Portal")
