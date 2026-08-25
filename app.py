@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import numpy as np
 
 st.set_page_config(
     page_title="Givtrade - Client Portal",
@@ -76,16 +77,36 @@ if 'accounts_df' not in st.session_state:
         {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
     ])
 
+# البنوك المعتمدة للإيداع مع إمكانية إضافة بنوك جديدة
+if 'user_banks' not in st.session_state:
+    st.session_state.user_banks = [
+        {
+            "bank_name": "First Abu Dhabi Bank (FAB)",
+            "account_title": "Hasan Yousef Jalloul",
+            "iban": "AE440330000000123456789",
+            "account_number": "10408824101",
+            "currency": "AED / USD",
+            "swift": "FABAAEAD"
+        },
+        {
+            "bank_name": "Emirates Islamic Bank (EIB)",
+            "account_title": "Hasan Yousef Jalloul",
+            "iban": "AE880240000000987654321",
+            "account_number": "40207791402",
+            "currency": "AED / USD",
+            "swift": "EBILAEAD"
+        }
+    ]
+
 if 'transactions_db' not in st.session_state:
     st.session_state.transactions_db = [
-        {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "USDT TRC20", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
-        {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-998241", "Date": "2026-08-20", "Type": "Deposit", "Method": "Bank Wire (FAB)", "Amount": "$30,000.00", "Account": "7701924", "Status": "Completed 🟢"},
+        {"Transaction ID": "TXN-994102", "Date": "2026-08-15", "Type": "Deposit", "Method": "Bank Wire (Emirates Islamic)", "Amount": "$30,000.00", "Account": "8840215", "Status": "Completed 🟢"},
     ]
 
 if 'tickets_db' not in st.session_state:
     st.session_state.tickets_db = [
-        {"Ticket ID": "#T-8801", "Date": "2026-08-22", "Subject": "Account Leverage Adjustment", "Department": "Dealing Desk", "Status": "Resolved 🟢"},
-        {"Ticket ID": "#T-8802", "Date": "2026-08-24", "Subject": "Server Latency & Routing Inquiry", "Department": "Technical Support", "Status": "Closed 🟢"},
+        {"Ticket ID": "#T-8801", "Date": "2026-08-22", "Subject": "Bank Settlement Clearance", "Department": "Finance & Settlements", "Status": "Resolved 🟢"},
     ]
 
 # --------------------------------------------------
@@ -195,8 +216,8 @@ elif menu_choice == "My Profile":
                 <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:12px 0; color:#64748b;">Password:</td><td style="font-weight:600;">••••••••</td><td style="text-align:right;"><span class="btn-green">Change</span></td></tr>
                 <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:12px 0; color:#64748b;">Email:</td><td style="font-weight:600;">{prof['email']}</td><td style="text-align:right;"><span class="btn-green">Change</span></td></tr>
                 <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:12px 0; color:#64748b;">Mobile Number:</td><td style="font-weight:600;">{prof['phone']}</td><td style="text-align:right;"><span class="btn-green">Change</span></td></tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:12px 0; color:#64748b;">Communication Language:</td><td style="font-weight:600;">{prof['lang']}</td><td style="text-align:right;"><span class="btn-green">Change</span></td></tr>
-                <tr><td style="padding:12px 0; color:#64748b;">Country of Residence:</td><td style="font-weight:600;">{prof['country']}</td><td></td></tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:12px 0; color:#64748b;">Communication Language:</td><td style="font-weight:600;">English</td><td style="text-align:right;"><span class="btn-green">Change</span></td></tr>
+                <tr><td style="padding:12px 0; color:#64748b;">Country of Residence:</td><td style="font-weight:600;">United Arab Emirates</td><td></td></tr>
             </table>
         </div>
         """, unsafe_allow_html=True)
@@ -233,67 +254,121 @@ elif menu_choice == "My Profile":
         """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# 📂 3. Funds Screen (Deposit & Withdrawal Management)
+# 📂 3. Funds Screen (Bank Wire Only & Custom Bank Accounts)
 # --------------------------------------------------
 elif menu_choice == "Funds":
-    tab_dep, tab_with, tab_hist = st.tabs(["📥 Deposit Funds", "📤 Withdrawal Request", "📜 Transaction History"])
+    tab_dep, tab_with, tab_banks, tab_hist = st.tabs([
+        "📥 Bank Deposit", "📤 Bank Withdrawal", "🏛️ Registered Bank Accounts", "📜 Transaction History"
+    ])
     
+    # 1. إيداع بنكي
     with tab_dep:
-        st.subheader("Deposit Capital into Trading Accounts")
+        st.subheader("Deposit Capital via Direct Bank Wire")
         col_d1, col_d2 = st.columns([1.2, 1])
+        
+        bank_names = [b['bank_name'] for b in st.session_state.user_banks]
+        
         with col_d1:
-            with st.form("dep_form"):
+            with st.form("dep_bank_form"):
                 acc_target = st.selectbox("Select Target Account", st.session_state.accounts_df['Account ID'].tolist())
-                dep_method = st.selectbox("Payment Method", ["USDT (TRC20 / ERC20)", "Bank Wire Transfer (USD / AED)", "Credit / Debit Card", "Crypto (BTC / ETH)"])
-                dep_val = st.number_input("Deposit Amount ($)", min_value=100.0, value=5000.0, step=500.0)
-                dep_sub = st.form_submit_button("Proceed to Secure Deposit", type="primary")
+                selected_bank_name = st.selectbox("Select Sending / Receiving Bank", bank_names)
+                dep_val = st.number_input("Deposit Amount ($)", min_value=100.0, value=10000.0, step=1000.0)
+                dep_ref = st.text_input("Bank Transfer Reference / Note", value=f"GIV-{prof['client_id']}")
+                
+                dep_sub = st.form_submit_button("Confirm Bank Wire Deposit", type="primary")
                 if dep_sub:
+                    # إضافة العملية في السجل
                     st.session_state.transactions_db.insert(0, {
                         "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
                         "Date": datetime.today().strftime('%Y-%m-%d'),
                         "Type": "Deposit",
-                        "Method": dep_method,
+                        "Method": f"Bank Wire ({selected_bank_name})",
                         "Amount": f"${dep_val:,.2f}",
                         "Account": acc_target,
                         "Status": "Completed 🟢"
                     })
-                    st.success(f"Deposit of ${dep_val:,.2f} registered successfully into account {acc_target}!")
+                    
+                    # تحديث رصيد وإيداع الحساب المختار تلقائياً
+                    idx = st.session_state.accounts_df.index[st.session_state.accounts_df['Account ID'] == acc_target].tolist()[0]
+                    st.session_state.accounts_df.at[idx, 'Deposit'] += dep_val
+                    st.session_state.accounts_df.at[idx, 'Balance'] += dep_val
+                    
+                    st.success(f"Deposit of ${dep_val:,.2f} via {selected_bank_name} confirmed and added to Account {acc_target}!")
                     st.rerun()
+
         with col_d2:
-            st.markdown("""
+            # عرض بيانات البنك المختار
+            curr_b = next(b for b in st.session_state.user_banks if b['bank_name'] == selected_bank_name)
+            st.markdown(f"""
             <div class="portal-card">
-                <h4>Instant Funding Channels</h4>
-                <p style="color:#64748b; font-size:13px; line-height:1.6;">
-                    • <b>Crypto / USDT:</b> Instant network confirmation (0.0% fee).<br>
-                    • <b>Direct Wire:</b> Same-day institutional liquidity routing.<br>
-                    • <b>Cards:</b> Real-time 3D Secure transaction processing.
+                <h4 style="margin-top:0;">{curr_b['bank_name']} Details</h4>
+                <p style="color:#64748b; font-size:13px; line-height:1.7;">
+                    • <b>Account Name:</b> {curr_b['account_title']}<br>
+                    • <b>Account Number:</b> {curr_b['account_number']}<br>
+                    • <b>IBAN:</b> {curr_b['iban']}<br>
+                    • <b>SWIFT / BIC:</b> {curr_b['swift']}<br>
+                    • <b>Currency:</b> {curr_b['currency']}<br>
+                    • <b>Processing Time:</b> Same-day Institutional Wire
                 </p>
             </div>
             """, unsafe_allow_html=True)
 
+    # 2. سحب بنكي
     with tab_with:
-        st.subheader("Request Capital Withdrawal")
-        with st.form("with_form"):
+        st.subheader("Request Capital Withdrawal to Bank Account")
+        with st.form("with_bank_form"):
             w_acc = st.selectbox("From Trading Account", st.session_state.accounts_df['Account ID'].tolist())
-            w_method = st.selectbox("Withdrawal Method", ["USDT TRC20 Wallet", "Bank Transfer (SWIFT)", "Credit Card Refund"])
-            w_dest = st.text_input("Destination Wallet Address / IBAN", value="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
-            w_val = st.number_input("Withdrawal Amount ($)", min_value=50.0, value=2500.0, step=100.0)
-            w_sub = st.form_submit_button("Submit Withdrawal Request", type="primary")
+            w_bank = st.selectbox("Select Destination Bank", bank_names)
+            
+            b_info = next(b for b in st.session_state.user_banks if b['bank_name'] == w_bank)
+            st.info(f"Transferring to: {b_info['bank_name']} | IBAN: {b_info['iban']}")
+            
+            w_val = st.number_input("Withdrawal Amount ($)", min_value=100.0, value=5000.0, step=500.0)
+            w_sub = st.form_submit_button("Submit Bank Wire Withdrawal", type="primary")
             if w_sub:
                 st.session_state.transactions_db.insert(0, {
                     "Transaction ID": f"TXN-{np.random.randint(100000, 999999)}",
                     "Date": datetime.today().strftime('%Y-%m-%d'),
                     "Type": "Withdrawal",
-                    "Method": w_method,
+                    "Method": f"Bank Wire ({w_bank})",
                     "Amount": f"${w_val:,.2f}",
                     "Account": w_acc,
                     "Status": "Processing 🟡"
                 })
-                st.success(f"Withdrawal request of ${w_val:,.2f} submitted to finance department.")
+                st.success(f"Withdrawal request of ${w_val:,.2f} sent to settlements department.")
                 st.rerun()
 
+    # 3. إدارة وإضافة بنوك جديدة
+    with tab_banks:
+        st.subheader("Registered Bank Accounts")
+        st.dataframe(pd.DataFrame(st.session_state.user_banks), use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        st.subheader("➕ Add New Bank Account")
+        with st.form("add_new_bank_form"):
+            nb_name = st.text_input("Bank Name", placeholder="e.g. Dubai Islamic Bank / Abu Dhabi Commercial Bank")
+            nb_title = st.text_input("Account Holder Name", value=f"{prof['first_name']} {prof['last_name']}")
+            nb_num = st.text_input("Account Number", placeholder="e.g. 1029384756")
+            nb_iban = st.text_input("IBAN Number", placeholder="AE...")
+            nb_swift = st.text_input("SWIFT / BIC Code", placeholder="e.g. DIBKAEAD")
+            nb_curr = st.selectbox("Currency", ["AED / USD", "USD", "AED", "EUR", "GBP"])
+            
+            add_b_btn = st.form_submit_button("Save New Bank Account", type="primary")
+            if add_b_btn and nb_name and nb_iban:
+                st.session_state.user_banks.append({
+                    "bank_name": nb_name,
+                    "account_title": nb_title,
+                    "iban": nb_iban,
+                    "account_number": nb_num,
+                    "currency": nb_curr,
+                    "swift": nb_swift
+                })
+                st.success(f"Bank '{nb_name}' registered successfully and available for deposits!")
+                st.rerun()
+
+    # 4. سجل المعاملات
     with tab_hist:
-        st.subheader("Complete Transaction Log")
+        st.subheader("Bank Wire Transactions Log")
         st.dataframe(pd.DataFrame(st.session_state.transactions_db), use_container_width=True, hide_index=True)
 
 # --------------------------------------------------
