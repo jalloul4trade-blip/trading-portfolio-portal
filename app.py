@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# 🎨 Official Client Portal Styling
+# 🎨 Official Client Portal Styling (Larger Sidebar Fonts)
 # --------------------------------------------------
 st.markdown("""
 <style>
@@ -20,13 +20,27 @@ st.markdown("""
         color: #1e293b;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+    
+    /* تكبير وتنسيق القائمة الجانبية */
     section[data-testid="stSidebar"] {
         background-color: #0b0f19;
         border-right: 1px solid #1e293b;
     }
-    section[data-testid="stSidebar"] * {
-        color: #94a3b8;
+    
+    /* تكبير خطوط خيارات القائمة */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        padding: 8px 12px !important;
+        color: #cbd5e1 !important;
+        border-radius: 8px;
+        transition: all 0.2s;
     }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
+        color: #00e676 !important;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
     .portal-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -78,9 +92,6 @@ st.markdown("""
         display: inline-block;
         text-decoration: none;
     }
-    .btn-download:hover {
-        background: #f1f5f9;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -101,8 +112,8 @@ if 'profile_data' not in st.session_state:
 
 if 'accounts_df' not in st.session_state:
     st.session_state.accounts_df = pd.DataFrame([
-        {"Account ID": "7701924", "Server": "Givtrade-Live 1", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
-        {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Daily P/L": 1370.0, "Status": "🔴 SUSPENDED"},
+        {"Account ID": "7701924", "Server": "Givtrade-Live 1", "Account Type": "VIP Institutional", "Deposit": 40000.0, "Balance": 40000.0, "Profit / Loss": 1370.0, "Status": "🔴 SUSPENDED"},
+        {"Account ID": "8840215", "Server": "Givtrade-Live 2", "Account Type": "VIP Institutional", "Deposit": 30000.0, "Balance": 30000.0, "Profit / Loss": 1370.0, "Status": "🔴 SUSPENDED"},
     ])
 
 if 'user_banks' not in st.session_state:
@@ -132,12 +143,12 @@ if 'transactions_df' not in st.session_state:
     ])
 
 # --------------------------------------------------
-# 🧭 Sidebar Menu
+# 🧭 Sidebar Menu (Enlarged & Polished)
 # --------------------------------------------------
 with st.sidebar:
-    st.markdown("<h2 style='color:#00e676; margin-bottom:20px;'><span style='background:#00e676; color:#000; padding:2px 8px; border-radius:6px; font-weight:900;'>G</span> Givtrade</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color:#00e676; font-size:26px; margin-bottom:25px;'><span style='background:#00e676; color:#000; padding:3px 10px; border-radius:6px; font-weight:900;'>G</span> Givtrade</h1>", unsafe_allow_html=True)
     
-    st.caption("TRADER'S MENU")
+    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:10px;'>TRADER'S MENU</p>", unsafe_allow_html=True)
     menu_choice = st.radio(
         label="Trader Menu Options",
         options=["Accounts", "Funds", "My Profile", "Downloads", "Economic Calendar"],
@@ -145,8 +156,8 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     
-    st.markdown("---")
-    st.caption("IB MENU")
+    st.markdown("<br><hr style='border:none; border-bottom:1px solid #1e293b;'><br>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#64748b; font-size:12px; font-weight:700; letter-spacing:1px; margin-bottom:10px;'>IB MENU</p>", unsafe_allow_html=True)
     ib_choice = st.checkbox("💼 Request IB")
     if ib_choice:
         menu_choice = "Request IB"
@@ -158,12 +169,12 @@ prof = st.session_state.profile_data
 
 col_top_l, col_top_r = st.columns([1.5, 1.5])
 with col_top_l:
-    st.markdown(f"<div style='padding-top:8px; font-size:14px;'>☰ &nbsp;&nbsp; <b>Home</b> / Trader's Menu / <b>{menu_choice}</b></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='padding-top:8px; font-size:15px;'>☰ &nbsp;&nbsp; <b>Home</b> / Trader's Menu / <b>{menu_choice}</b></div>", unsafe_allow_html=True)
 
 with col_top_r:
     st.markdown(f"""
-    <div style='text-align:right; font-size:13px; display:flex; align-items:center; justify-content:flex-end; gap:15px;'>
-        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 6px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
+    <div style='text-align:right; font-size:14px; display:flex; align-items:center; justify-content:flex-end; gap:18px;'>
+        <span><b>{prof['first_name']} {prof['last_name']}</b> <span style='background:#00e676; color:#000; padding:2px 7px; border-radius:4px; font-weight:bold;'>{prof['client_id']}</span></span>
         <span>🇬🇧</span>
         <span>✉️ Messages</span>
         <span>🎧 Help Desk</span>
@@ -171,40 +182,68 @@ with col_top_r:
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-# أزرار الإجراءات السريعة العلوية
-col_btn1, col_btn2 = st.columns([4, 1.2])
-with col_btn2:
-    st.markdown("""
-    <div style='display:flex; justify-content:flex-end; gap:10px; margin-bottom:20px;'>
-        <span style='background:#0f172a; color:white; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;'>+ Open Demo Account</span>
-        <span style='background:#00c853; color:white; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;'>💳 Deposit Funds</span>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 # --------------------------------------------------
 # 📂 1. Accounts Screen
 # --------------------------------------------------
 if menu_choice == "Accounts":
+    
+    # أزرار الإجراءات العلوية
+    c_head1, c_head_btn1, c_head_btn2 = st.columns([3, 1.2, 1])
+    with c_head_btn1:
+        # Dialog لفتح حساب ديمو
+        @st.dialog("Open New Demo Trading Account")
+        def open_demo_dialog():
+            with st.form("create_demo_form"):
+                d_platform = st.selectbox("Trading Platform", ["MetaTrader 5 (MT5)", "MetaTrader 4 (MT4)"])
+                d_type = st.selectbox("Account Type", ["Standard STP Demo", "VIP ECN Demo", "Raw Spread Demo"])
+                d_lev = st.selectbox("Leverage", ["1:100", "1:200", "1:500", "1:1000"], index=2)
+                d_bal = st.selectbox("Initial Virtual Deposit ($)", [1000.0, 5000.0, 10000.0, 50000.0, 100000.0], index=2)
+                
+                sub_demo = st.form_submit_button("Create Demo Account", type="primary", use_container_width=True)
+                if sub_demo:
+                    new_acc_id = str(np.random.randint(7000000, 8999999))
+                    new_row = pd.DataFrame([{
+                        "Account ID": new_acc_id,
+                        "Server": "Givtrade-Demo 1",
+                        "Account Type": d_type,
+                        "Deposit": float(d_bal),
+                        "Balance": float(d_bal),
+                        "Profit / Loss": 0.0,
+                        "Status": "🟢 ACTIVE DEMO"
+                    }])
+                    st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_row], ignore_index=True)
+                    st.success(f"Demo Account #{new_acc_id} created successfully!")
+                    st.rerun()
+
+        if st.button("➕ Open Demo Account", use_container_width=True):
+            open_demo_dialog()
+
+    with c_head_btn2:
+        if st.button("💳 Deposit Funds", type="primary", use_container_width=True):
+            st.info("Navigate to the 'Funds' tab on the sidebar to proceed with bank deposits.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     df = st.session_state.accounts_df.copy()
     
     df['Deposit'] = pd.to_numeric(df['Deposit'], errors='coerce').fillna(0)
     df['Balance'] = pd.to_numeric(df['Balance'], errors='coerce').fillna(0)
-    df['Daily P/L'] = pd.to_numeric(df['Daily P/L'], errors='coerce').fillna(0)
+    df['Profit / Loss'] = pd.to_numeric(df['Profit / Loss'], errors='coerce').fillna(0)
     
-    df['Calculated Equity'] = df['Balance'] + df['Daily P/L']
+    df['Calculated Equity'] = df['Balance'] + df['Profit / Loss']
     df['Total Net P/L'] = df['Calculated Equity'] - df['Deposit']
     
     tot_deposit = df['Deposit'].sum()
     tot_equity = df['Calculated Equity'].sum()
-    tot_daily_pl = df['Daily P/L'].sum()
+    tot_pl = df['Profit / Loss'].sum()
     tot_net_growth = df['Total Net P/L'].sum()
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Total Deposits", f"${tot_deposit:,.2f}")
     m2.metric("Live Equity", f"${tot_equity:,.2f}")
-    m3.metric("Daily P/L", f"${tot_daily_pl:+,.2f}", f"{(tot_daily_pl/tot_deposit)*100:+.2f}%" if tot_deposit > 0 else "0.00%")
+    m3.metric("Profit / Loss", f"${tot_pl:+,.2f}", f"{(tot_pl/tot_deposit)*100:+.2f}%" if tot_deposit > 0 else "0.00%")
     m4.metric("Total Cumulative Net P/L", f"${tot_net_growth:+,.2f}", f"{(tot_net_growth/tot_deposit)*100:+.2f}%" if tot_deposit > 0 else "0.00%")
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -217,10 +256,10 @@ if menu_choice == "Accounts":
         column_config={
             "Deposit": st.column_config.NumberColumn("Deposit ($)", format="$%.2f"),
             "Balance": st.column_config.NumberColumn("Balance ($)", format="$%.2f"),
-            "Daily P/L": st.column_config.NumberColumn("Daily P/L ($)", format="$%.2f"),
-            "Status": st.column_config.SelectboxColumn("Status", options=["🔴 SUSPENDED", "🟢 ACTIVE", "🟡 PENDING"]),
-            "Server": st.column_config.SelectboxColumn("Server", options=["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Pro STP"]),
-            "Account Type": st.column_config.SelectboxColumn("Account Type", options=["VIP Institutional", "Classic STP", "Swap-Free Gold"])
+            "Profit / Loss": st.column_config.NumberColumn("Profit / Loss ($)", format="$%.2f"),
+            "Status": st.column_config.SelectboxColumn("Status", options=["🔴 SUSPENDED", "🟢 ACTIVE", "🟢 ACTIVE DEMO", "🟡 PENDING"]),
+            "Server": st.column_config.SelectboxColumn("Server", options=["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1", "Givtrade-Pro STP"]),
+            "Account Type": st.column_config.SelectboxColumn("Account Type", options=["VIP Institutional", "Classic STP", "Swap-Free Gold", "Standard STP Demo", "VIP ECN Demo"])
         }
     )
 
@@ -237,19 +276,19 @@ if menu_choice == "Accounts":
             c_a1, c_a2, c_a3 = st.columns(3)
             with c_a1:
                 n_id = st.text_input("Account ID", value="9920145")
-                n_srv = st.selectbox("Server", ["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Pro STP"])
+                n_srv = st.selectbox("Server", ["Givtrade-Live 1", "Givtrade-Live 2", "Givtrade-Demo 1", "Givtrade-Pro STP"])
             with c_a2:
                 n_type = st.selectbox("Type", ["VIP Institutional", "Classic STP", "Swap-Free Gold"])
                 n_dep = st.number_input("Deposit ($)", min_value=100.0, value=10000.0, step=1000.0)
             with c_a3:
                 n_bal = st.number_input("Balance ($)", min_value=0.0, value=10000.0, step=1000.0)
-                n_pl = st.number_input("Daily P/L ($)", value=0.0, step=100.0)
+                n_pl = st.number_input("Profit / Loss ($)", value=0.0, step=100.0)
             
             btn_add_acc = st.form_submit_button("Save Account", type="primary")
             if btn_add_acc and n_id:
                 new_acc_row = pd.DataFrame([{
                     "Account ID": n_id, "Server": n_srv, "Account Type": n_type,
-                    "Deposit": n_dep, "Balance": n_bal, "Daily P/L": n_pl, "Status": "🔴 SUSPENDED"
+                    "Deposit": n_dep, "Balance": n_bal, "Profit / Loss": n_pl, "Status": "🔴 SUSPENDED"
                 }])
                 st.session_state.accounts_df = pd.concat([st.session_state.accounts_df, new_acc_row], ignore_index=True)
                 st.rerun()
@@ -260,6 +299,7 @@ if menu_choice == "Accounts":
         "Account ID": df['Account ID'],
         "Server": df['Server'],
         "Calculated Equity": df['Calculated Equity'].map('${:,.2f}'.format),
+        "Profit / Loss": df['Profit / Loss'].map('{:+,.2f}$'.format),
         "Total Profit / Loss": df['Total Net P/L'].map('{:+,.2f}$'.format),
         "ROI (%)": ((df['Total Net P/L'] / df['Deposit']) * 100).map('{:+.2f}%'.format),
         "Status": df['Status']
